@@ -3,9 +3,7 @@
   "functions": {
     "server.ts": {
       "runtime": "@vercel/node",
-      "includeFiles": [
-        "node_modules/pdf-parse/**"
-      ]
+      "includeFiles": "node_modules/pdf-parse/**"
     }
   },
   "routes": [
