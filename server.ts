@@ -9,7 +9,6 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 import mammoth from 'mammoth';
 import { PDFParse } from 'pdf-parse';
-import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 
 dotenv.config();
@@ -411,7 +410,8 @@ ${text}
 
 // Vite & Static Asset mounting
 async function start() {
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
