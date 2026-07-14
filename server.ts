@@ -8,7 +8,7 @@ import path from 'path';
 import multer from 'multer';
 import dotenv from 'dotenv';
 import mammoth from 'mammoth';
-import { PDFParse } from 'pdf-parse';
+
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 
@@ -252,6 +252,16 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
         const mammothResult = await mammoth.extractRawText({ buffer });
         text = mammothResult.value;
       } else if (extension === 'pdf') {
+        if (typeof (global as any).DOMMatrix === 'undefined') {
+          (global as any).DOMMatrix = class DOMMatrix {};
+        }
+        if (typeof (global as any).ImageData === 'undefined') {
+          (global as any).ImageData = class ImageData {};
+        }
+        if (typeof (global as any).Path2D === 'undefined') {
+          (global as any).Path2D = class Path2D {};
+        }
+        const { PDFParse } = await import('pdf-parse');
         const parser = new PDFParse({ data: buffer });
         const pdfData = await parser.getText();
         text = pdfData.text;
@@ -295,7 +305,7 @@ ${text}
     `;
 
     let response;
-    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
     let lastErr = null;
 
     for (const modelName of candidateModels) {
