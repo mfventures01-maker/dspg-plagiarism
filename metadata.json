@@ -1,0 +1,8 @@
+{
+  "name": "Plagiarism Checker",
+  "description": "Plagiarism and AI Content Checker for Delta State Polytechnic Ogwashi-Uku School of Engineering HND Projects Committee.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
