@@ -280,7 +280,11 @@ Your task is to perform an exhaustive, rigorous, and highly detailed originality
 Analyze the text for:
 1. Plagiarism & Copying: Search your knowledge graph for exact or semantic matches with textbooks, IEEE/academic research papers, online libraries, standard engineering codes, and websites. Identify similarity percentages.
 2. AI-generated Content: Detect typical AI style patterns, perplexity, burstiness, vocabulary indicators, and repetitive structure to determine the AI-generated content probability.
-3. Formulate an academic executive summary customized for the Delta State Polytechnic Ogwashi-Uku School of Engineering standards, highlighting any compliance suggestions or issues.
+3. Formulate an academic executive summary customized for the Delta State Polytechnic Ogwashi-Uku School of Engineering standards. The "summary" field in the JSON response must strictly structure the text to include the following labeled sections:
+   - EXECUTIVE SUMMARY: [detailed overview of original versus matching text]
+   - SIMILARITY SCORE: [the similarity score computed as (100 - originalityScore)%]
+   - FINDINGS: [detailed plagiarism and style findings]
+   - RECOMMENDATIONS: [committee guidelines and compliance actions]
 
 Provide a structured, detailed JSON response adhering exactly to the specified JSON schema. Do not include markdown code block syntax around the JSON inside the text response itself, return raw JSON string.
 
@@ -291,7 +295,7 @@ ${text}
     `;
 
     let response;
-    const candidateModels = ['gemini-3.5-flash', 'gemini-3.1-flash-lite'];
+    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash'];
     let lastErr = null;
 
     for (const modelName of candidateModels) {
@@ -421,11 +425,15 @@ async function start() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`DSPG Plagiarism Checker Server running on http://localhost:${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`DSPG Plagiarism Checker Server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
 start().catch((err) => {
   console.error('Failed to start DSPG server:', err);
 });
+
+export default app;
