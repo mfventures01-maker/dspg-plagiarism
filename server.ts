@@ -8,6 +8,12 @@ import path from 'path';
 import multer from 'multer';
 import dotenv from 'dotenv';
 import mammoth from 'mammoth';
+
+// Polyfill DOMMatrix for pdfjs-dist under Vercel Serverless environment
+if (typeof global !== 'undefined' && !(global as any).DOMMatrix) {
+  (global as any).DOMMatrix = class DOMMatrix {};
+}
+
 import { PDFParse } from 'pdf-parse';
 import { GoogleGenAI, Type } from '@google/genai';
 
