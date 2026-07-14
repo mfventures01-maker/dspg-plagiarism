@@ -1,14 +1,22 @@
 {
   "version": 2,
-  "functions": {
-    "server.ts": {
-      "includeFiles": "node_modules/pdf-parse/**"
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "dist/server.cjs",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server.ts"
+      "dest": "dist/server.cjs"
     },
     {
       "src": "/assets/(.*)",
