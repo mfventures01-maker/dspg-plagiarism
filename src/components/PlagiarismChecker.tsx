@@ -14,21 +14,25 @@ import { ReportFooter } from './Report/ReportFooter';
 import { PDFReport } from './Report/PDFReport';
 import { usePlagiarismCheck } from '../hooks/usePlagiarismCheck';
 import { useFileUpload } from '../hooks/useFileUpload';
-import { CommitteeData } from '../types';
+import { CommitteeData, Student, ProjectMetadata, Supervisor } from '../types';
 import { 
   ShieldCheck, AlertTriangle, FileText, RefreshCw, 
   CheckCircle, BarChart, Zap, Download, Printer, 
   HelpCircle, User, BookOpen, UserCheck, Eye, Clipboard,
-  Cpu, FileCheck, ArrowRight, Lock
+  Cpu, FileCheck, ArrowRight, Lock, Plus, Trash2
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { Branding } from "@/branding";
 
 // Pre-loaded high-quality engineering HND project sample for immediate testing
 const SAMPLE_PROJECT = {
   title: 'Design and Construction of a Microcontroller-Based Smart Irrigation System',
-  student: 'Okonkwo Chukwudi Emmanuel',
-  regNumber: 'DSPG/HND/ENG/2024/0482',
-  supervisor: 'Engr. Brian Abugewa',
+  department: 'School of Engineering',
+  academicSession: '2023/2024',
+  supervisor: { name: 'Engr. Brian Abugewa' },
+  students: [
+    { id: '1', fullName: 'Okonkwo Chukwudi Emmanuel', matricNumber: 'DSPG/HND/ENG/2024/0482' }
+  ],
   text: `This project describes the design and implementation of an automated smart irrigation system utilizing an ATmega328P microcontroller integrated with capacitive soil moisture sensors and a water pump. Irrigation is one of the most vital agricultural practices in Nigeria, where drought and erratic rainfall patterns often threaten food security, especially in Delta State. Standard manual irrigation leads to massive water waste and inefficient labor resources. 
 
 To resolve this challenge, the proposed system reads real-time moisture parameters from the soil and cross-references them against configured threshold limits. When the volumetric water content drops below 35%, the microcontroller triggers a 5V relay module which activates a submersible water pump. Once the soil reaches a saturated level of 75%, the controller deactivates the pump. This closed-loop automatic feedback loop ensures optimal moisture preservation and prevents root rot.
@@ -45,17 +49,23 @@ export const PlagiarismChecker: React.FC = () => {
   const [textInput, setTextInput] = useState('');
   
   // Form details
-  const [studentName, setStudentName] = useState('');
-  const [regNumber, setRegNumber] = useState('');
   const [projectTitle, setProjectTitle] = useState('');
+  const [department, setDepartment] = useState('School of Engineering');
+  const [academicSession, setAcademicSession] = useState('2023/2024');
   const [supervisorName, setSupervisorName] = useState('');
+  const [students, setStudents] = useState<Student[]>([
+    { id: crypto.randomUUID(), fullName: '', matricNumber: '' }
+  ]);
 
   // Committee endorsement states
   const [committee, setCommittee] = useState<CommitteeData>({
-    studentName: '',
-    regNumber: '',
-    projectTitle: '',
-    supervisorName: '',
+    projectMetadata: {
+      projectTitle: '',
+      department: '',
+      academicSession: '',
+      supervisor: { name: '' },
+      students: []
+    },
     chairmanName: 'Engr. (Dr.) Benjamin Odoni',
     chairmanSignature: null,
     chairmanSignType: 'drawn',
@@ -74,21 +84,45 @@ export const PlagiarismChecker: React.FC = () => {
   useEffect(() => {
     setCommittee(prev => ({
       ...prev,
-      studentName,
-      regNumber,
-      projectTitle,
-      supervisorName
+      projectMetadata: {
+        projectTitle,
+        department,
+        academicSession,
+        supervisor: { name: supervisorName },
+        students
+      }
     }));
-  }, [studentName, regNumber, projectTitle, supervisorName]);
+  }, [projectTitle, department, academicSession, supervisorName, students]);
 
   // Load sample content for demo purposes
   const handleLoadSample = () => {
-    setStudentName(SAMPLE_PROJECT.student);
-    setRegNumber(SAMPLE_PROJECT.regNumber);
     setProjectTitle(SAMPLE_PROJECT.title);
-    setSupervisorName(SAMPLE_PROJECT.supervisor);
+    setDepartment(SAMPLE_PROJECT.department);
+    setAcademicSession(SAMPLE_PROJECT.academicSession);
+    setSupervisorName(SAMPLE_PROJECT.supervisor.name);
+    setStudents(SAMPLE_PROJECT.students);
     setTextInput(SAMPLE_PROJECT.text);
     setActiveTab('text');
+  };
+
+  const handleAddStudent = () => {
+    if (students.length >= 5) {
+      alert('Maximum of 5 students allowed per project.');
+      return;
+    }
+    setStudents([...students, { id: crypto.randomUUID(), fullName: '', matricNumber: '' }]);
+  };
+
+  const handleRemoveStudent = (id: string) => {
+    if (students.length <= 1) {
+      alert('At least one student is required.');
+      return;
+    }
+    setStudents(students.filter(s => s.id !== id));
+  };
+
+  const updateStudent = (id: string, field: 'fullName' | 'matricNumber', value: string) => {
+    setStudents(students.map(s => s.id === id ? { ...s, [field]: value } : s));
   };
 
   const handleStartAnalysis = async () => {
@@ -97,13 +131,13 @@ export const PlagiarismChecker: React.FC = () => {
         alert('Please enter at least 10 characters to perform plagiarism detection.');
         return;
       }
-      await runCheck(textInput, null);
+      await runCheck(textInput, null, committee.projectMetadata);
     } else {
       if (!file) {
         alert('Please select or upload a document file (.txt, .docx, .pdf).');
         return;
       }
-      await runCheck('', file);
+      await runCheck('', file, committee.projectMetadata);
     }
   };
 
@@ -133,22 +167,15 @@ export const PlagiarismChecker: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
           <div className="p-6 md:p-8 bg-gradient-to-r from-[#1a2a6c] via-[#2d4059] to-[#1a2a6c] text-white flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-5">
-              <div className="w-16 h-16 shrink-0 bg-white p-1 rounded-full shadow-md">
-                <svg viewBox="0 0 100 100" className="w-full h-full">
-                  <circle cx="50" cy="50" r="46" fill="none" stroke="#1a2a6c" strokeWidth="4" />
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#c9a84c" strokeWidth="2" />
-                  <path d="M 50 18 C 58 18, 68 25, 68 40 C 68 62, 50 78, 50 82 C 50 78, 32 62, 32 40 C 32 25, 42 18, 50 18 Z" fill="#1a2a6c" />
-                  <path d="M 46 60 Q 50 45, 54 60 Z" fill="#c9a84c" />
-                  <path d="M 50 48 Q 50 35, 47 38 Q 53 30, 53 38 Z" fill="#ef4444" />
-                  <path d="M 37 54 C 42 50, 48 52, 50 54 C 52 52, 58 50, 63 54 L 63 44 C 58 41, 52 43, 50 44 C 48 43, 42 41, 37 44 Z" fill="#ffffff" />
-                </svg>
+              <div className="w-16 h-16 shrink-0 bg-white p-1 rounded-full shadow-md overflow-hidden flex items-center justify-center">
+                <img src={Branding.logo} alt={Branding.institution} />
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-                  DELTA STATE POLYTECHNIC OGWASHI-UKU
+                  {Branding.institution.toUpperCase()}
                 </h1>
                 <p className="text-sm font-medium text-slate-200 uppercase tracking-wider">
-                  School of Engineering &bull; HND Projects Committee
+                  {Branding.departmentName} &bull; {Branding.committeeName}
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
@@ -184,34 +211,6 @@ export const PlagiarismChecker: React.FC = () => {
               subtitle="Please compile the fields below. This details will be printed on the official cover sheet of the plagiarism audit certificate."
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-slate-400" /> Student Full Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:bg-white focus:border-[#1a2a6c] outline-none transition-all duration-150"
-                    placeholder="e.g. Okonkwo Chukwudi Emmanuel"
-                    value={studentName}
-                    onChange={(e) => setStudentName(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <UserCheck className="h-3.5 w-3.5 text-slate-400" /> Registration Number
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:bg-white focus:border-[#1a2a6c] outline-none transition-all duration-150"
-                    placeholder="e.g. DSPG/HND/ENG/2024/0482"
-                    value={regNumber}
-                    onChange={(e) => setRegNumber(e.target.value)}
-                  />
-                </div>
-
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                     <BookOpen className="h-3.5 w-3.5 text-slate-400" /> Project / Thesis Title
@@ -223,6 +222,34 @@ export const PlagiarismChecker: React.FC = () => {
                     placeholder="e.g. Design and Construction of a Microcontroller-Based Smart Irrigation System"
                     value={projectTitle}
                     onChange={(e) => setProjectTitle(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <UserCheck className="h-3.5 w-3.5 text-slate-400" /> Department
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:bg-white focus:border-[#1a2a6c] outline-none transition-all duration-150"
+                    placeholder="e.g. School of Engineering"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <BookOpen className="h-3.5 w-3.5 text-slate-400" /> Academic Session
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:bg-white focus:border-[#1a2a6c] outline-none transition-all duration-150"
+                    placeholder="e.g. 2023/2024"
+                    value={academicSession}
+                    onChange={(e) => setAcademicSession(e.target.value)}
                   />
                 </div>
 
@@ -238,6 +265,56 @@ export const PlagiarismChecker: React.FC = () => {
                     value={supervisorName}
                     onChange={(e) => setSupervisorName(e.target.value)}
                   />
+                </div>
+
+                <div className="md:col-span-2 mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5 text-slate-400" /> Project Students
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleAddStudent}
+                      disabled={students.length >= 5}
+                      className="text-xs flex items-center gap-1 font-semibold text-[#1a2a6c] hover:bg-blue-50 px-2 py-1 rounded disabled:opacity-50"
+                    >
+                      <Plus className="h-3 w-3" /> Add Student
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {students.map((student, index) => (
+                      <div key={student.id} className="flex gap-3 items-start bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            required
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:border-[#1a2a6c] outline-none transition-all duration-150"
+                            placeholder="Full Name"
+                            value={student.fullName}
+                            onChange={(e) => updateStudent(student.id, 'fullName', e.target.value)}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            required
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:border-[#1a2a6c] outline-none transition-all duration-150"
+                            placeholder="Matric Number"
+                            value={student.matricNumber}
+                            onChange={(e) => updateStudent(student.id, 'matricNumber', e.target.value)}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveStudent(student.id)}
+                          disabled={students.length <= 1}
+                          className="mt-1 p-2 text-red-500 hover:bg-red-50 rounded disabled:opacity-30"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </Card>
@@ -374,126 +451,53 @@ export const PlagiarismChecker: React.FC = () => {
               </Card>
             )}
 
-            {/* 3. Plagiarism Analysis Results Panel */}
-            {state.status === 'complete' && state.result && (
+            {/* 3. Document Extraction Metrics Panel */}
+            {state.status === 'complete' && state.normalizedDoc && (
               <div className="space-y-6">
                 
-                {/* Visual Scores Bento Grid */}
-                <Card title="Analysis Metrics Summary">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                {/* Extraction Stats Bento Grid */}
+                <Card title="Document Normalization Metrics">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
                     
-                    {/* Dial 1: Originality */}
-                    <div className="border border-slate-100 p-4 rounded-xl flex flex-col items-center bg-slate-50/50">
-                      <ProgressRing
-                        percentage={state.result.originalityScore}
-                        label="Originality"
-                        type="originality"
-                      />
-                      <p className="text-xs font-medium text-slate-500 text-center mt-3">
-                        Higher is better. DSPG Benchmark: <strong>80% minimum</strong>.
+                    <div className="border border-slate-100 p-4 rounded-xl flex flex-col items-center justify-center bg-slate-50/50 text-center">
+                      <div className="text-3xl font-bold text-[#1a2a6c] mb-1">{state.normalizedDoc.wordCount}</div>
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Words</div>
+                    </div>
+
+                    <div className="border border-slate-100 p-4 rounded-xl flex flex-col items-center justify-center bg-slate-50/50 text-center">
+                      <div className="text-3xl font-bold text-[#1a2a6c] mb-1">{state.normalizedDoc.sentenceCount}</div>
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sentences</div>
+                    </div>
+
+                    <div className="border border-slate-100 p-4 rounded-xl flex flex-col items-center justify-center bg-slate-50/50 text-center">
+                      <div className="text-3xl font-bold text-[#1a2a6c] mb-1">{state.normalizedDoc.paragraphCount}</div>
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Paragraphs</div>
+                    </div>
+                    
+                    <div className="border border-slate-100 p-4 rounded-xl flex flex-col items-center justify-center bg-slate-50/50 text-center">
+                      <div className="text-3xl font-bold text-[#1a2a6c] mb-1">{state.normalizedDoc.characterCount}</div>
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Characters</div>
+                    </div>
+
+                  </div>
+                </Card>
+
+                {/* Document Integrity Hash */}
+                <Card
+                  title="Cryptographic Integrity Hash"
+                  subtitle="Deterministic SHA-256 fingerprint generated from the normalized text extraction."
+                >
+                  <div className="flex items-center gap-4 bg-slate-100 p-4 rounded-xl border border-slate-200">
+                    <ShieldCheck className="h-8 w-8 text-emerald-600 shrink-0" />
+                    <div className="overflow-hidden">
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">SHA-256 Fingerprint</p>
+                      <p className="font-mono text-xs md:text-sm text-slate-800 break-all select-all">
+                        {state.normalizedDoc.documentHash}
                       </p>
                     </div>
-
-                    {/* Dial 2: AI Generated probability */}
-                    <div className="border border-slate-100 p-4 rounded-xl flex flex-col items-center bg-slate-50/50">
-                      <ProgressRing
-                        percentage={state.result.aiProbability}
-                        label="AI generated"
-                        type="ai"
-                      />
-                      <p className="text-xs font-medium text-slate-500 text-center mt-3">
-                        Lower is better. Probable writing statistical pattern.
-                      </p>
-                    </div>
-
-                    {/* Status Alert Badge */}
-                    <div className="p-5 rounded-xl border flex flex-col justify-center items-center h-full text-center bg-white border-slate-200">
-                      {(state.result.originalityScore) >= 80 ? (
-                        <>
-                          <div className="p-3 bg-emerald-100 text-emerald-600 rounded-full mb-3">
-                            <CheckCircle className="h-7 w-7" />
-                          </div>
-                          <h4 className="text-sm font-bold text-slate-800">Draft Compliant</h4>
-                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                            Originality score of <strong>{state.result.originalityScore}%</strong> complies with the HND defense rules.
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <div className="p-3 bg-amber-100 text-amber-600 rounded-full mb-3">
-                            <AlertTriangle className="h-7 w-7" />
-                          </div>
-                          <h4 className="text-sm font-bold text-slate-800 font-sans">Draft Non-Compliant</h4>
-                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                            Originality score of <strong>{state.result.originalityScore}%</strong> is below the required 80% threshold.
-                          </p>
-                        </>
-                      )}
-                    </div>
                   </div>
                 </Card>
 
-                {/* Detailed Flagged Sections Table */}
-                <Card
-                  title="Source Match Segment Map"
-                  subtitle="Detailed breakdown of matched sentences, academic sources, and similarity factors."
-                >
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-left text-sm">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-slate-100/80 text-slate-500 text-xs font-bold uppercase">
-                          <th className="py-3 px-4">S/N</th>
-                          <th className="py-3 px-4">Flagged Section</th>
-                          <th className="py-3 px-4">Match Source</th>
-                          <th className="py-3 px-4 text-center">Sim %</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {state.result.sources && state.result.sources.length > 0 ? (
-                          state.result.sources.map((source, index) => (
-                            <tr key={index} className="hover:bg-slate-50/60 transition-all">
-                              <td className="py-3 px-4 font-bold text-slate-700">{index + 1}</td>
-                              <td className="py-3 px-4 text-slate-600 font-mono text-xs max-w-[240px] leading-relaxed">
-                                "{source.text}"
-                              </td>
-                              <td className="py-3 px-4 text-slate-500 italic max-w-[150px] truncate">
-                                {source.source}
-                              </td>
-                              <td className="py-3 px-4 text-center">
-                                <span className={clsx(
-                                  'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold',
-                                  source.similarity >= 50
-                                    ? 'bg-red-50 text-red-700 border border-red-100'
-                                    : 'bg-amber-50 text-amber-700 border border-amber-100'
-                                )}>
-                                  {source.similarity}%
-                                </span>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="py-6 px-4 text-center text-slate-400 italic">
-                              No matching plagiarized sources detected. High-quality human draft.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
-
-                {/* Executive Summary Card */}
-                <Card
-                  title="HND Committee Executive Summary"
-                  subtitle="Detailed feedback from the AI audit mapping Nigerian Technical Education standards."
-                >
-                  <div className="border-l-4 border-[#1a2a6c] bg-slate-50 p-4 rounded-r-xl">
-                    <p className="text-sm text-slate-600 italic leading-relaxed whitespace-pre-wrap">
-                      {state.result.summary}
-                    </p>
-                  </div>
-                </Card>
               </div>
             )}
           </div>
@@ -563,12 +567,8 @@ export const PlagiarismChecker: React.FC = () => {
                   {/* Certified stamp placeholder visualization */}
                   <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full border border-[#1a2a6c] flex items-center justify-center bg-white shrink-0">
-                        <svg viewBox="0 0 100 100" className="w-10 h-10">
-                          <circle cx="50" cy="50" r="45" fill="none" stroke="#1a2a6c" strokeWidth="2" />
-                          <circle cx="50" cy="50" r="40" fill="none" stroke="#c9a84c" strokeWidth="1" />
-                          <path d="M 50 25 C 50 25, 60 40, 50 50 C 40 40, 50 25, 50 25" fill="#1a2a6c" />
-                        </svg>
+                      <div className="w-12 h-12 rounded-full border border-[#1a2a6c] flex items-center justify-center bg-white shrink-0 overflow-hidden">
+                        <img src={Branding.logo} alt={Branding.institution} />
                       </div>
                       <div>
                         <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
@@ -623,7 +623,7 @@ export const PlagiarismChecker: React.FC = () => {
                   <div className="grid grid-cols-2 gap-3 w-full mt-6">
                     <a
                       href={state.reportUrl}
-                      download={`DSPG_HND_Plagiarism_Report_${studentName.replace(/\s+/g, '_') || 'Student'}.pdf`}
+                      download={`DSPG_HND_Plagiarism_Report_${committee.projectMetadata?.students?.[0]?.fullName?.replace(/\s+/g, '_') || 'Student'}.pdf`}
                       className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#1a2a6c] hover:bg-[#142054] text-white text-sm font-medium rounded-lg shadow-sm transition-all active:scale-[0.98]"
                     >
                       <Download className="h-4 w-4" />
@@ -647,7 +647,7 @@ export const PlagiarismChecker: React.FC = () => {
         </div>
 
         {/* Full Width Certified Report Preview Simulator */}
-        {state.status === 'complete' && state.result && (
+        {state.status === 'complete' && state.normalizedDoc && (
           <div className="mt-8 animate-fade-in">
             <Card
               title="Certified Certificate Live Preview"
@@ -656,7 +656,7 @@ export const PlagiarismChecker: React.FC = () => {
                 state.reportGenerated && state.reportUrl ? (
                   <a
                     href={state.reportUrl}
-                    download={`DSPG_HND_Plagiarism_Report_${studentName.replace(/\s+/g, '_') || 'Student'}.pdf`}
+                    download={`DSPG_HND_Plagiarism_Report_${committee.projectMetadata?.students?.[0]?.fullName?.replace(/\s+/g, '_') || 'Student'}.pdf`}
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all duration-150 active:scale-95"
                   >
                     <Download className="h-3.5 w-3.5" />

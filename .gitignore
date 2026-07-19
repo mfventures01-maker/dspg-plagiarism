@@ -8,3 +8,11 @@ coverage/
 !.env.example
 
 .vercel
+.env*.local
+
+# Generated Logs and Outputs
+*_out.txt
+health*.txt
+*log*.txt
+*.cjs
+tsconfig.effective.json

@@ -9,32 +9,70 @@ export interface SourceMatch {
   similarity: number;
 }
 
-export interface AnalysisResult {
-  originalityScore: number;
-  aiProbability: number;
-  flaggedSections: string[];
-  summary: string;
-  sources: SourceMatch[];
+export interface Sentence {
+  id: string;
+  startOffset: number;
+  endOffset: number;
   wordCount: number;
-  analysisDate: string;
-  analysisDuration: string;
+  characterCount: number;
+  text: string;
+}
+
+export interface Paragraph {
+  id: string;
+  sentenceIds: string[];
+  startOffset: number;
+  endOffset: number;
+  text: string;
+}
+
+export interface NormalizedDocument {
+  originalText: string;
+  normalizedText: string;
+  wordCount: number;
+  characterCount: number;
+  sentenceCount: number;
+  paragraphCount: number;
+  language: string;
+  documentHash: string; // SHA-256
+  processedAt: string;
+  sentences: Sentence[];
+  paragraphs: Paragraph[];
+  analysisDuration: string; // Time taken to process
 }
 
 export interface AnalysisState {
   status: 'idle' | 'scanning' | 'complete' | 'error';
   text: string;
   fileName: string | null;
-  result: AnalysisResult | null;
+  normalizedDoc: NormalizedDocument | null;
   reportGenerated: boolean;
   reportUrl: string | null;
   error?: string;
 }
 
-export interface CommitteeData {
-  studentName: string;
-  regNumber: string;
+export interface Student {
+  id: string;
+  fullName: string;
+  matricNumber: string;
+}
+
+export interface Supervisor {
+  name: string;
+  title?: string;
+  department?: string;
+}
+
+export interface ProjectMetadata {
   projectTitle: string;
-  supervisorName: string;
+  department: string;
+  academicSession: string;
+  supervisor: Supervisor;
+  students: Student[];
+}
+
+export interface CommitteeData {
+  projectMetadata: ProjectMetadata;
   chairmanName: string;
   chairmanSignature: string | null; // base64 representation of drawn/uploaded signature
   chairmanSignType: 'drawn' | 'typed' | 'uploaded';

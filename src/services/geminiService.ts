@@ -1,12 +1,16 @@
-import { AnalysisResult } from '../types';
+import { NormalizedDocument, ProjectMetadata } from '../types';
 
-export const checkPlagiarism = async (text: string, file?: File | null): Promise<AnalysisResult> => {
+export const checkPlagiarism = async (text: string, file?: File | null, metadata?: ProjectMetadata): Promise<NormalizedDocument> => {
   try {
     const formData = new FormData();
     formData.append('text', text);
-    
+
     if (file) {
       formData.append('file', file);
+    }
+
+    if (metadata) {
+      formData.append('metadata', JSON.stringify(metadata));
     }
 
     const response = await fetch('/api/analyze', {
@@ -16,11 +20,17 @@ export const checkPlagiarism = async (text: string, file?: File | null): Promise
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Server returned an error during analysis');
+      // Extract message from structured error schema: { success: false, error: { code, message } }
+      const message =
+        errorData?.error?.message ||
+        (typeof errorData?.error === 'string' ? errorData.error : null) ||
+        'Server returned an error during analysis';
+      throw new Error(message);
     }
 
     const data = await response.json();
-    return data.result as AnalysisResult;
+    // Server now returns { success: true, data: NormalizedDocument }
+    return data.data as NormalizedDocument;
   } catch (error: any) {
     console.error('Error in checkPlagiarism service:', error);
     throw new Error(error.message || 'Failed to connect to plagiarism analysis service. Please try again.');

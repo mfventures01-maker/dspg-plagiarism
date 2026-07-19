@@ -6,37 +6,37 @@
 import { useState, useCallback } from 'react';
 import { checkPlagiarism } from '../services/geminiService';
 import { generateReport } from '../services/reportGenerator';
-import { AnalysisState, CommitteeData } from '../types';
+import { AnalysisState, CommitteeData, ProjectMetadata } from '../types';
 
 export const usePlagiarismCheck = () => {
   const [state, setState] = useState<AnalysisState>({
     status: 'idle',
     text: '',
     fileName: null,
-    result: null,
+    normalizedDoc: null,
     reportGenerated: false,
     reportUrl: null
   });
 
-  const runCheck = useCallback(async (text: string, file?: File | null) => {
+  const runCheck = useCallback(async (text: string, file?: File | null, metadata?: ProjectMetadata) => {
     setState(prev => ({
       ...prev,
       status: 'scanning',
       text,
       fileName: file ? file.name : null,
       error: undefined,
-      result: null,
+      normalizedDoc: null,
       reportGenerated: false,
       reportUrl: null
     }));
 
     try {
-      const result = await checkPlagiarism(text, file);
+      const normalizedDoc = await checkPlagiarism(text, file, metadata);
       
       setState(prev => ({
         ...prev,
         status: 'complete',
-        result
+        normalizedDoc
       }));
     } catch (error: any) {
       console.error('Plagiarism check hook failure:', error);
@@ -50,7 +50,7 @@ export const usePlagiarismCheck = () => {
 
   const compilePDFReport = useCallback(async (committeeData: CommitteeData) => {
     setState(prev => {
-      if (!prev.result) return prev;
+      if (!prev.normalizedDoc) return prev;
       return { ...prev, reportGenerated: false };
     });
 
@@ -75,7 +75,7 @@ export const usePlagiarismCheck = () => {
       status: 'idle',
       text: '',
       fileName: null,
-      result: null,
+      normalizedDoc: null,
       reportGenerated: false,
       reportUrl: null
     });
