@@ -106,7 +106,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
             <UploadCloud className="h-6 w-6" />
           </div>
           <p className="text-sm font-semibold text-slate-700">
-            Drag and drop your file here, or <span className="text-[#1a2a6c] hover:underline">browse</span>
+            Drag and drop your file here, or <span className="text-[#1a2a6c] hover:underline">browse files</span>
           </p>
           <p className="text-xs text-slate-500 mt-1">
             Supported formats: PDF, DOCX, TXT (Max {maxSizeMB}MB)

@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { CandidatePaper } from './CandidatePaper.js';
+import { SimilarityEvidence, EvidenceProvenance } from './SimilarityEvidence.js';
+
 export interface SourceMatch {
   text: string;
   source: string;
@@ -41,35 +44,38 @@ export interface NormalizedDocument {
   analysisDuration: string; // Time taken to process
 }
 
+export interface AIAnalysis {
+  verdict: 'Original' | 'Suspicious' | 'Plagiarism Detected';
+  similarityScore: number;
+  reasoning: string;
+  recommendations: string[];
+  provider: string;
+  model: string;
+  durationMs: number;
+}
+
+export interface AnalysisResult {
+  document: NormalizedDocument;
+  aiAnalysis?: AIAnalysis;
+  federationMetrics?: any;
+  candidatePapers?: CandidatePaper[];
+  [key: string]: any;
+}
+
 export interface AnalysisState {
   status: 'idle' | 'scanning' | 'complete' | 'error';
   text: string;
   fileName: string | null;
-  normalizedDoc: NormalizedDocument | null;
+  normalizedDoc: AnalysisResult | null;
   reportGenerated: boolean;
   reportUrl: string | null;
   error?: string;
 }
 
-export interface Student {
-  id: string;
-  fullName: string;
-  matricNumber: string;
-}
+import { Student } from '../models/Student';
+import { ProjectMetadata } from '../models/ProjectMetadata';
 
-export interface Supervisor {
-  name: string;
-  title?: string;
-  department?: string;
-}
-
-export interface ProjectMetadata {
-  projectTitle: string;
-  department: string;
-  academicSession: string;
-  supervisor: Supervisor;
-  students: Student[];
-}
+export type { Student, ProjectMetadata };
 
 export interface CommitteeData {
   projectMetadata: ProjectMetadata;
@@ -81,4 +87,68 @@ export interface CommitteeData {
   secretarySignType: 'drawn' | 'typed' | 'uploaded';
   approvalDate: string;
   stampImage: string | null; // base64 or preset
+}
+
+export * from './CandidatePaper';
+export * from './SimilarityEvidence';
+
+export interface EvidencePackage {
+  studentDocument: {
+    title?: string;
+    wordCount: number;
+    chunkCount: number;
+  };
+  candidatePaper: CandidatePaper;
+  similarity: SimilarityEvidence;
+  confidence: {
+    level: "High" | "Medium" | "Low";
+    score: number;
+  };
+  provenance: EvidenceProvenance;
+  generatedAt: string;
+
+  // Downstream compatibility fields
+  metrics: {
+    exactMatch: number;
+    ngram: number;
+    jaccard: number;
+    cosine: number;
+    textSimilarity?: number;
+    semanticSimilarity?: number;
+    bibliographicOverlap?: number;
+    citationMatch?: number;
+  };
+  matchingFragments: any[];
+}
+
+export const MODEL_VERSION = "2.1";
+
+export interface EvidenceAssessment {
+  retrievalState:
+    | "SUCCESS_WITH_CANDIDATES"
+    | "SUCCESS_NO_CANDIDATES"
+    | "PARTIAL_SUCCESS"
+    | "PROVIDER_FAILURE";
+
+  similarityState:
+    | "MATCH_FOUND"
+    | "NO_MATCH"
+    | "NOT_MEASURABLE";
+
+  core: {
+    retrieved: number;
+    accepted: number;
+    latencyMs: number;
+    status: string;
+  };
+
+  openAlex: {
+    retrieved: number;
+    accepted: number;
+    latencyMs: number;
+    status: string;
+  };
+
+  evidence: any[];
+  confidence: number;
 }

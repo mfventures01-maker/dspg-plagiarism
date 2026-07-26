@@ -1,112 +1,131 @@
-import { AIProvider, AIRequest, AIResponse, AIError } from '../interfaces/AIProvider';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { AIProvider } from '../interfaces/AIProvider';
+import { AIRequest } from '../types/AIRequest';
+import { AIResponse } from '../types/AIResponse';
+import { AIError, AIUnavailableError, AuthenticationError, RateLimitError } from '../errors/AIErrors';
 import { AIConfig } from '../config/AIConfig';
 
 export class GeminiProvider implements AIProvider {
   name = 'Gemini';
-  // Use v1beta or v1 as needed, assuming v1beta for general availability of generateContent
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent';
 
-  isAvailable(): boolean {
-    return !!AIConfig.gemini.apiKey;
-  }
+  async initialize(): Promise<void> {}
 
   async healthCheck(): Promise<boolean> {
     try {
-      if (!this.isAvailable()) return false;
+      if (!AIConfig.gemini.apiKey || !AIConfig.gemini.enabled) return false;
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${AIConfig.gemini.apiKey}`);
+      const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), AIConfig.defaults.timeoutMs);
+      
+      const response = await fetch(`${baseUrl}?key=${AIConfig.gemini.apiKey}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeout);
       return response.ok;
     } catch {
       return false;
     }
   }
 
-  async generate(request: AIRequest): Promise<AIResponse> {
+  async analyzeDocument(request: AIRequest): Promise<AIResponse> {
     const startTime = Date.now();
     
     try {
-      const url = `${this.baseUrl}?key=${AIConfig.gemini.apiKey}`;
+      const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), AIConfig.defaults.timeoutMs);
       
-      const contents = [];
-      if (request.systemPrompt) {
-        // Gemini handles system instructions differently, but for simplicity we can prepend or use the system_instruction field
-        // We will just include it in the user prompt for this simple adapter if not explicitly supported
-      }
-
-      // Format for Gemini generateContent
-      const payload: any = {
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: (request.systemPrompt ? request.systemPrompt + '\n\n' : '') + request.prompt }]
-          }
-        ],
-        generationConfig: {
-          temperature: request.temperature ?? 0.7,
-        }
-      };
-
-      if (request.maxTokens) {
-        payload.generationConfig.maxOutputTokens = request.maxTokens;
-      }
-
-      const response = await fetch(url, {
+      const response = await fetch(`${baseUrl}/gemini-2.5-flash:generateContent?key=${AIConfig.gemini.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: request.systemPrompt || '' }]
+          },
+          contents: [{
+            role: 'user',
+            parts: [{ text: request.prompt + (request.metadata ? '\n\nMetadata Context:\n' + JSON.stringify(request.metadata, null, 2) : '') }]
+          }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: request.temperature ?? 0.1,
+            maxOutputTokens: request.maxTokens,
+          }
+        }),
+        signal: controller.signal
       });
 
-      const latencyMs = Date.now() - startTime;
+      clearTimeout(timeout);
+      const durationMs = Date.now() - startTime;
 
       if (!response.ok) {
-        let errorData: any;
+        let errorMessage = 'Gemini API Error';
         try {
-          errorData = await response.json();
+          const errorData = await response.json();
+          errorMessage = errorData.error?.message || errorMessage;
         } catch {
-          errorData = { error: { message: response.statusText } };
+          errorMessage = response.statusText || errorMessage;
         }
         
-        const isRetryable = response.status === 429 || response.status >= 500;
+        if (response.status === 401 || response.status === 403) throw new AuthenticationError(this.name, errorMessage);
+        if (response.status === 429) throw new RateLimitError(this.name, errorMessage);
+        if (response.status >= 500) throw new AIUnavailableError(this.name, errorMessage);
         
-        const error = new Error(errorData.error?.message || 'Gemini API Error') as AIError;
-        error.provider = this.name;
-        error.code = String(response.status);
-        error.retryable = isRetryable;
-        error.name = 'AIError';
-        throw error;
+        throw new AIError('AI_INTERNAL_ERROR', this.name, errorMessage, false);
       }
 
-      const data = await response.json();
+      const json = await response.json();
+      const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
       
-      // Extract content from Gemini response
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      
-      return {
-        provider: this.name,
-        model: 'gemini-1.5-pro-latest',
-        content,
-        usage: {
-          promptTokens: data.usageMetadata?.promptTokenCount || 0,
-          completionTokens: data.usageMetadata?.candidatesTokenCount || 0,
-          totalTokens: data.usageMetadata?.totalTokenCount || 0,
-        },
-        latencyMs,
-        requestId: `gemini-${Date.now()}`, // Gemini doesn't typically return an ID in the root response
-      };
-    } catch (err: any) {
-      if (err.name === 'AIError') {
-        throw err;
+      let parsedData;
+      try {
+        let cleanContent = rawText;
+        if (cleanContent.startsWith('```json')) {
+          cleanContent = cleanContent.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+        } else if (cleanContent.startsWith('```')) {
+          cleanContent = cleanContent.replace(/^```\n?/, '').replace(/\n?```$/, '');
+        }
+        parsedData = JSON.parse(cleanContent);
+      } catch (e) {
+        parsedData = { content: rawText };
       }
       
-      const latencyMs = Date.now() - startTime;
-      const error = new Error(err.message || 'Network Error') as AIError;
-      error.provider = this.name;
-      error.code = 'NETWORK_ERROR';
-      error.retryable = true;
-      error.name = 'AIError';
-      throw error;
+      return {
+        success: true,
+        provider: this.name,
+        model: 'gemini-2.5-flash',
+        durationMs,
+        data: parsedData
+      };
+    } catch (err: unknown) {
+      if (err instanceof AIError) throw err;
+      
+      const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+      throw new AIError(
+        isTimeout ? 'AI_TIMEOUT' : 'AI_INTERNAL_ERROR',
+        this.name,
+        err instanceof Error ? err.message : 'Network Error',
+        true
+      );
     }
   }
+
+  async calculateSimilarity(text1: string, text2: string): Promise<number> {
+    throw new Error('Not implemented');
+  }
+
+  async detectAI(text: string): Promise<number> {
+    throw new Error('Not implemented');
+  }
+
+  async shutdown(): Promise<void> {}
 }
+

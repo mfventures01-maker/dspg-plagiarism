@@ -1,0 +1,985 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Projects\\dspg\\node_modules\\@playwright\\test\\cli.js",
+      "test"
+    ],
+    "configFile": "C:\\Projects\\dspg\\playwright.config.ts",
+    "rootDir": "C:/Projects/dspg/certifications/runtime",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": "C:\\Projects\\dspg\\certifications\\global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Projects/dspg/certifications/evidence/traces-and-screenshots",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Projects/dspg/certifications/runtime",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "certifications/evidence/playwright-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run start",
+      "url": "http://localhost:3000/health/runtime",
+      "reuseExistingServer": true,
+      "timeout": 120000,
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "ai.spec.ts",
+      "file": "ai.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LAW-R005: CORE AI request executes",
+          "file": "ai.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should fire AI_REQUEST_SENT and AI_RESPONSE_RECEIVED and receive 200 OK from /api/analyze",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5627,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:33:55.559Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\ai-LAW-R005-CORE-AI-reques-5e8e5-ive-200-OK-from-api-analyze-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\ai-LAW-R005-CORE-AI-reques-5e8e5-ive-200-OK-from-api-analyze-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\ai-LAW-R005-CORE-AI-reques-5e8e5-ive-200-OK-from-api-analyze-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f4c16ad2df3b1859900b-58bec3e8c16b6e6d1d82",
+              "file": "ai.spec.ts",
+              "line": 4,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "branding.spec.ts",
+      "file": "branding.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LAW-B012 to LAW-B015: Branding Certification",
+          "file": "branding.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should have correct document title",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2157,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:01.789Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-3d043-have-correct-document-title-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-3d043-have-correct-document-title-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-3d043-have-correct-document-title-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c7f19e806919ac620bf8-522d05af70bdef74e5b1",
+              "file": "branding.spec.ts",
+              "line": 13,
+              "column": 3
+            },
+            {
+              "title": "should have correct OpenGraph metadata",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2683,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:04.056Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-c8c33--correct-OpenGraph-metadata-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-c8c33--correct-OpenGraph-metadata-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-c8c33--correct-OpenGraph-metadata-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c7f19e806919ac620bf8-a4fffefa8b01b885a723",
+              "file": "branding.spec.ts",
+              "line": 18,
+              "column": 3
+            },
+            {
+              "title": "should render institution name on homepage",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2221,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:06.803Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-403b9-nstitution-name-on-homepage-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-403b9-nstitution-name-on-homepage-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-403b9-nstitution-name-on-homepage-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c7f19e806919ac620bf8-4bd4a8669f39733fca2a",
+              "file": "branding.spec.ts",
+              "line": 29,
+              "column": 3
+            },
+            {
+              "title": "should resolve logo and favicon properly",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2076,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:09.105Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-d6102-e-logo-and-favicon-properly-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-d6102-e-logo-and-favicon-properly-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\branding-LAW-B012-to-LAW-B-d6102-e-logo-and-favicon-properly-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c7f19e806919ac620bf8-2ca100dc6b1fda751742",
+              "file": "branding.spec.ts",
+              "line": 35,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "homepage.spec.ts",
+      "file": "homepage.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LAW-R001: Homepage loads",
+          "file": "homepage.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should return HTTP 200, DOM loaded, no fatal JS exceptions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2195,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:11.270Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\homepage-LAW-R001-Homepage-5eb27-aded-no-fatal-JS-exceptions-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\homepage-LAW-R001-Homepage-5eb27-aded-no-fatal-JS-exceptions-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\homepage-LAW-R001-Homepage-5eb27-aded-no-fatal-JS-exceptions-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "84e7eb052e8cbae1c9f0-503f4d2b23bfaaee552a",
+              "file": "homepage.spec.ts",
+              "line": 4,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "LAW-R002: Brand identity exists",
+          "file": "homepage.spec.ts",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should render DSPG logo, title, and brand elements",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2235,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:13.525Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\homepage-LAW-R002-Brand-id-0a7f7-go-title-and-brand-elements-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\homepage-LAW-R002-Brand-id-0a7f7-go-title-and-brand-elements-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\homepage-LAW-R002-Brand-id-0a7f7-go-title-and-brand-elements-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "84e7eb052e8cbae1c9f0-02b430203b8c332fe08a",
+              "file": "homepage.spec.ts",
+              "line": 18,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "LAW-R008 & LAW-R009: Browser and Network Integrity",
+          "file": "homepage.spec.ts",
+          "line": 34,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should load without console errors or failed requests",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2754,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:15.850Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\homepage-LAW-R008-LAW-R009-ff5ce-e-errors-or-failed-requests-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\homepage-LAW-R008-LAW-R009-ff5ce-e-errors-or-failed-requests-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\homepage-LAW-R008-LAW-R009-ff5ce-e-errors-or-failed-requests-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "84e7eb052e8cbae1c9f0-fc2f0f852dfcd30a6ea5",
+              "file": "homepage.spec.ts",
+              "line": 35,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "mobile.spec.ts",
+      "file": "mobile.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LAW-R010: Responsive certification",
+          "file": "mobile.spec.ts",
+          "line": 9,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should render correctly on Mobile without horizontal overflow and keep upload functional",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2288,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:18.710Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\mobile-LAW-R010-Responsive-e83d8--and-keep-upload-functional-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\mobile-LAW-R010-Responsive-e83d8--and-keep-upload-functional-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\mobile-LAW-R010-Responsive-e83d8--and-keep-upload-functional-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e79c838550b25e92508e-175829bf42dc915b3006",
+              "file": "mobile.spec.ts",
+              "line": 11,
+              "column": 5
+            },
+            {
+              "title": "should render correctly on Tablet without horizontal overflow and keep upload functional",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2577,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:21.206Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\mobile-LAW-R010-Responsive-539c0--and-keep-upload-functional-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\mobile-LAW-R010-Responsive-539c0--and-keep-upload-functional-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\mobile-LAW-R010-Responsive-539c0--and-keep-upload-functional-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e79c838550b25e92508e-39034281bacab2e0a980",
+              "file": "mobile.spec.ts",
+              "line": 11,
+              "column": 5
+            },
+            {
+              "title": "should render correctly on Desktop without horizontal overflow and keep upload functional",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2547,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:24.008Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\mobile-LAW-R010-Responsive-62f6e--and-keep-upload-functional-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\mobile-LAW-R010-Responsive-62f6e--and-keep-upload-functional-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\mobile-LAW-R010-Responsive-62f6e--and-keep-upload-functional-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e79c838550b25e92508e-fb09875a78efba23d360",
+              "file": "mobile.spec.ts",
+              "line": 11,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "pdf.spec.ts",
+      "file": "pdf.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LAW-R007: PDF report generated",
+          "file": "pdf.spec.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should compile, enable download, and serve a valid PDF file",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3827,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:26.736Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\pdf-LAW-R007-PDF-report-ge-c6f07--and-serve-a-valid-PDF-file-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\pdf-LAW-R007-PDF-report-ge-c6f07--and-serve-a-valid-PDF-file-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\pdf-LAW-R007-PDF-report-ge-c6f07--and-serve-a-valid-PDF-file-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5cd159bb3e06cbdca264-312ae366e610093f7e62",
+              "file": "pdf.spec.ts",
+              "line": 5,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "report.spec.ts",
+      "file": "report.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LAW-R006: Analysis renders",
+          "file": "report.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should display similarity score, AI probability, and recommendation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 13167,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "Similarity score not found. This indicates a missing feature in the current implementation, but the test asserts the law.\n"
+                        },
+                        {
+                          "text": "AI probability not found.\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:30.943Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\report-LAW-R006-Analysis-r-10b9b-bability-and-recommendation-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\report-LAW-R006-Analysis-r-10b9b-bability-and-recommendation-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\report-LAW-R006-Analysis-r-10b9b-bability-and-recommendation-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "de0b0b91aa0163f47401-54e0c452ca57c78e5f64",
+              "file": "report.spec.ts",
+              "line": 4,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "upload.spec.ts",
+      "file": "upload.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LAW-R003: Upload system ready",
+          "file": "upload.spec.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should enable upload tab and accept valid files",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2099,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:44.332Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\upload-LAW-R003-Upload-sys-30665--tab-and-accept-valid-files-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\upload-LAW-R003-Upload-sys-30665--tab-and-accept-valid-files-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\upload-LAW-R003-Upload-sys-30665--tab-and-accept-valid-files-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64f97298e5aac3754605-271a15e5a7269b5c64a5",
+              "file": "upload.spec.ts",
+              "line": 5,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "LAW-R004: Document upload succeeds",
+          "file": "upload.spec.ts",
+          "line": 21,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should fire UPLOAD_STARTED and UPLOAD_COMPLETE events",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2756,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-20T12:34:46.520Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\upload-LAW-R004-Document-u-dfbc7--and-UPLOAD-COMPLETE-events-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\upload-LAW-R004-Document-u-dfbc7--and-UPLOAD-COMPLETE-events-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Projects\\dspg\\certifications\\evidence\\traces-and-screenshots\\upload-LAW-R004-Document-u-dfbc7--and-UPLOAD-COMPLETE-events-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64f97298e5aac3754605-37224ecbe4a136eb00b2",
+              "file": "upload.spec.ts",
+              "line": 22,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-07-20T12:33:52.650Z",
+    "duration": 57669.583,
+    "expected": 15,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

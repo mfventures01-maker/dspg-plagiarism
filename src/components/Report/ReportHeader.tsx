@@ -13,10 +13,10 @@ export const ReportHeader: React.FC = () => {
         {Branding.institution}
       </h1>
       <h2 className="text-base md:text-lg font-semibold text-slate-700 uppercase tracking-wide mt-1">
-        {Branding.departmentName}
+        {Branding.school}
       </h2>
       <p className="text-sm font-medium text-[#c9a84c] tracking-widest uppercase mt-0.5">
-        {Branding.committeeName}
+        {Branding.committee}
       </p>
       
       <div className="w-16 h-1 bg-[#c9a84c] rounded mt-3"></div>

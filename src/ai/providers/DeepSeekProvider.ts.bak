@@ -1,0 +1,135 @@
+import { AIProvider } from '../interfaces/AIProvider';
+import { AIRequest } from '../types/AIRequest';
+import { AIResponse } from '../types/AIResponse';
+import { AIError } from '../errors/AIErrors';
+import { AIConfig } from '../config/AIConfig';
+
+export class DeepSeekProvider implements AIProvider {
+  name = 'DeepSeek';
+
+  async initialize(): Promise<void> {}
+
+  async healthCheck(): Promise<boolean> {
+    try {
+      if (!AIConfig.nvidia.apiKey || !AIConfig.nvidia.enabled) return false;
+      
+      const baseUrl = AIConfig.nvidia.baseUrl || 'https://integrate.api.nvidia.com/v1';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), AIConfig.defaults.timeoutMs);
+      
+      const response = await fetch(`${baseUrl}/models`, {
+        headers: {
+          'Authorization': `Bearer ${AIConfig.nvidia.apiKey}`,
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeout);
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async analyzeDocument(request: AIRequest): Promise<AIResponse> {
+    const startTime = Date.now();
+    
+    try {
+      const baseUrl = AIConfig.nvidia.baseUrl || 'https://integrate.api.nvidia.com/v1';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), AIConfig.defaults.timeoutMs);
+      
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AIConfig.nvidia.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: AIConfig.nvidia.model || 'deepseek-ai/deepseek-r1',
+          messages: [
+            ...(request.systemPrompt ? [{ role: 'system', content: request.systemPrompt }] : []),
+            { role: 'user', content: request.prompt + (request.metadata ? '\n\nMetadata Context:\n' + JSON.stringify(request.metadata, null, 2) : '') }
+          ],
+          temperature: request.temperature ?? 0.7,
+          max_tokens: request.maxTokens,
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      const durationMs = Date.now() - startTime;
+
+      if (!response.ok) {
+        let errorMessage = 'DeepSeek API Error';
+        try {
+          const errorData = await response.json() as { error?: { message?: string }, detail?: string };
+          errorMessage = errorData.error?.message || errorData.detail || errorMessage;
+        } catch {
+          errorMessage = response.statusText || errorMessage;
+        }
+        
+        const isRetryable = response.status === 429 || response.status >= 500;
+        
+        throw new AIError(
+          isRetryable ? 'AI_PROVIDER_UNAVAILABLE' : 'AI_INTERNAL_ERROR',
+          this.name,
+          errorMessage,
+          isRetryable
+        );
+      }
+
+      const data = await response.json() as {
+        model?: string;
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+      
+      const model = data.model || AIConfig.nvidia.model || 'deepseek-ai/deepseek-r1';
+      const content = data.choices?.[0]?.message?.content || '';
+      
+      let parsedData;
+      try {
+        let cleanContent = content;
+        if (cleanContent.startsWith('```json')) {
+          cleanContent = cleanContent.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+        } else if (cleanContent.startsWith('```')) {
+          cleanContent = cleanContent.replace(/^```\n?/, '').replace(/\n?```$/, '');
+        }
+        parsedData = JSON.parse(cleanContent);
+      } catch (e) {
+        parsedData = { content };
+      }
+      
+      return {
+        success: true,
+        provider: this.name,
+        model,
+        durationMs,
+        data: parsedData
+      };
+    } catch (err: unknown) {
+      if (err instanceof AIError) {
+        throw err;
+      }
+      
+      const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+      throw new AIError(
+        isTimeout ? 'AI_TIMEOUT' : 'AI_INTERNAL_ERROR',
+        this.name,
+        err instanceof Error ? err.message : 'Network Error',
+        true
+      );
+    }
+  }
+
+  async calculateSimilarity(text1: string, text2: string): Promise<number> {
+    throw new Error('Not implemented');
+  }
+
+  async detectAI(text: string): Promise<number> {
+    throw new Error('Not implemented');
+  }
+
+  async shutdown(): Promise<void> {}
+}

@@ -1,0 +1,137 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { CandidatePaper } from '../../types';
+import { COREProvider } from '../../providers/COREProvider';
+import { OpenAlexProvider } from '../../providers/OpenAlexProvider';
+import { SearchQueryBuilder } from '../core/SearchQueryBuilder';
+import { CandidateMergeEngine } from './CandidateMergeEngine';
+
+export interface ProviderMetrics {
+  name: string;
+  retrieved: number;
+  accepted: number;
+  rejected: number;
+  duplicate: number;
+  time: number; // Duration in seconds
+  status: 'SUCCESS' | 'FAILED';
+}
+
+export interface FederationMetrics {
+  providers: ProviderMetrics[];
+}
+
+export interface ICandidatePaperProvider {
+  getCandidates(documentText: string): Promise<CandidatePaper[]>;
+}
+
+export class CandidatePaperProvider implements ICandidatePaperProvider {
+  private readonly coreProvider: COREProvider;
+  private readonly openAlexProvider: OpenAlexProvider;
+  private readonly queryBuilder: SearchQueryBuilder;
+  private readonly mergeEngine: CandidateMergeEngine;
+
+  constructor() {
+    this.coreProvider = new COREProvider();
+    this.openAlexProvider = new OpenAlexProvider();
+    this.queryBuilder = new SearchQueryBuilder();
+    this.mergeEngine = new CandidateMergeEngine();
+  }
+
+  /**
+   * Retrieves candidate papers from CORE and OpenAlex in parallel,
+   * merges and deduplicates them using CandidateMergeEngine.
+   */
+  public async getCandidates(documentText: string): Promise<CandidatePaper[]> {
+    console.log('Research Federation Started');
+
+    const queryStr = this.queryBuilder.buildQuery(documentText);
+    const query = { text: queryStr };
+
+    let corePapers: CandidatePaper[] = [];
+    let coreStatus: 'SUCCESS' | 'FAILED' = 'SUCCESS';
+    let coreTime = 0;
+
+    let openAlexPapers: CandidatePaper[] = [];
+    let openAlexStatus: 'SUCCESS' | 'FAILED' = 'SUCCESS';
+    let openAlexTime = 0;
+
+    const timeoutPromise = <T>(promise: Promise<T>, ms: number, name: string): Promise<T> => {
+      let timeoutId: NodeJS.Timeout;
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error(`[${name}] Request timed out after ${ms}ms`));
+        }, ms);
+      });
+      return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+    };
+
+    // Search CORE in parallel with OpenAlex
+    const corePromise = (async () => {
+      const start = Date.now();
+      try {
+        corePapers = await timeoutPromise(this.coreProvider.search(query), 3500, 'CORE');
+      } catch (err) {
+        console.error('[Research Federation] CORE retrieval failed:', err);
+        coreStatus = 'FAILED';
+      } finally {
+        coreTime = Number(((Date.now() - start) / 1000).toFixed(2));
+      }
+    })();
+
+    const openAlexPromise = (async () => {
+      const start = Date.now();
+      try {
+        openAlexPapers = await timeoutPromise(this.openAlexProvider.search(query), 3500, 'OpenAlex');
+      } catch (err) {
+        console.error('[Research Federation] OpenAlex retrieval failed:', err);
+        openAlexStatus = 'FAILED';
+      } finally {
+        openAlexTime = Number(((Date.now() - start) / 1000).toFixed(2));
+      }
+    })();
+
+    await Promise.all([corePromise, openAlexPromise]);
+
+    console.log(`[Research Federation] CORE status: ${coreStatus} (${corePapers.length} retrieved, ${coreTime}s)`);
+    console.log(`[Research Federation] OpenAlex status: ${openAlexStatus} (${openAlexPapers.length} retrieved, ${openAlexTime}s)`);
+
+    // Run Candidate Merge Engine
+    const mergeResult = this.mergeEngine.merge(corePapers, openAlexPapers);
+
+    // Map metrics for each provider
+    const providersMetrics: ProviderMetrics[] = [
+      {
+        name: 'CORE',
+        retrieved: corePapers.length,
+        accepted: mergeResult.metrics.CORE.accepted,
+        rejected: mergeResult.metrics.CORE.rejected,
+        duplicate: mergeResult.metrics.CORE.duplicate,
+        time: coreTime,
+        status: coreStatus
+      },
+      {
+        name: 'OpenAlex',
+        retrieved: openAlexPapers.length,
+        accepted: mergeResult.metrics.OpenAlex.accepted,
+        rejected: mergeResult.metrics.OpenAlex.rejected,
+        duplicate: mergeResult.metrics.OpenAlex.duplicate,
+        time: openAlexTime,
+        status: openAlexStatus
+      }
+    ];
+
+    const resultList = mergeResult.candidates;
+    (resultList as any).federationMetrics = {
+      providers: providersMetrics
+    };
+    (resultList as any).mergeMetrics = {
+      duplicatesRemoved: mergeResult.metrics.duplicatesRemoved,
+      totalMerged: mergeResult.metrics.totalMerged
+    };
+
+    return resultList;
+  }
+}

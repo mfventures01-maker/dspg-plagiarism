@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { checkPlagiarism } from '../services/geminiService';
+import { checkPlagiarism } from '../services/aiService';
 import { generateReport } from '../services/reportGenerator';
 import { AnalysisState, CommitteeData, ProjectMetadata } from '../types';
 
@@ -31,8 +31,18 @@ export const usePlagiarismCheck = () => {
     }));
 
     try {
+      if (file) {
+        window.dispatchEvent(new CustomEvent('DSPG_TELEMETRY', { detail: { event: 'UPLOAD_STARTED' } }));
+      }
+      window.dispatchEvent(new CustomEvent('DSPG_TELEMETRY', { detail: { event: 'AI_REQUEST_SENT' } }));
+      
       const normalizedDoc = await checkPlagiarism(text, file, metadata);
       
+      if (file) {
+        window.dispatchEvent(new CustomEvent('DSPG_TELEMETRY', { detail: { event: 'UPLOAD_COMPLETE' } }));
+      }
+      window.dispatchEvent(new CustomEvent('DSPG_TELEMETRY', { detail: { event: 'AI_RESPONSE_RECEIVED' } }));
+
       setState(prev => ({
         ...prev,
         status: 'complete',
@@ -63,6 +73,7 @@ export const usePlagiarismCheck = () => {
         reportGenerated: true,
         reportUrl
       }));
+      window.dispatchEvent(new CustomEvent('DSPG_TELEMETRY', { detail: { event: 'REPORT_RENDERED' } }));
       return reportUrl;
     } catch (error: any) {
       console.error('Failed to compile PDF report:', error);

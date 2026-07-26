@@ -1,96 +1,144 @@
-import { AIProvider, AIRequest, AIResponse, AIError } from '../interfaces/AIProvider';
+import { AIProvider } from '../interfaces/AIProvider';
+import { AIRequest } from '../types/AIRequest';
+import { AIResponse } from '../types/AIResponse';
+import { AIError } from '../errors/AIErrors';
 import { AIConfig } from '../config/AIConfig';
 
 export class DeepSeekProvider implements AIProvider {
   name = 'DeepSeek';
-  private baseUrl = 'https://api.deepseek.com/v1/chat/completions'; // Typical DeepSeek endpoint
 
-  isAvailable(): boolean {
-    return !!AIConfig.core.apiKey;
-  }
+  async initialize(): Promise<void> {}
 
   async healthCheck(): Promise<boolean> {
     try {
-      if (!this.isAvailable()) return false;
+      if (!AIConfig.deepseek.apiKey || !AIConfig.deepseek.enabled) return false;
       
-      const response = await fetch('https://api.deepseek.com/v1/models', {
+      const baseUrl = AIConfig.deepseek.baseUrl || 'https://api.deepseek.com/v1';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), AIConfig.defaults.timeoutMs);
+      
+      // DeepSeek doesn't always have /models, hit chat completions with a dummy request or models if supported
+      const response = await fetch(`${baseUrl}/models`, {
         headers: {
-          'Authorization': `Bearer ${AIConfig.core.apiKey}`,
+          'Authorization': `Bearer ${AIConfig.deepseek.apiKey}`,
         },
+        signal: controller.signal
       });
-      return response.ok;
+      
+      clearTimeout(timeout);
+      return response.ok || response.status === 404; // if /models is not implemented, still ok if we get a response
+
     } catch {
       return false;
     }
   }
 
-  async generate(request: AIRequest): Promise<AIResponse> {
+  async analyzeDocument(request: AIRequest): Promise<AIResponse> {
     const startTime = Date.now();
     
     try {
-      const response = await fetch(this.baseUrl, {
+      const baseUrl = AIConfig.deepseek.baseUrl || 'https://api.deepseek.com/v1';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), AIConfig.defaults.timeoutMs);
+      
+      console.log("DEEPSEEK REQUEST URL:", `${baseUrl}/chat/completions`);
+      console.log("DEEPSEEK MODEL:", AIConfig.deepseek.model);
+
+      const response = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${AIConfig.core.apiKey}`,
+          'Authorization': `Bearer ${AIConfig.deepseek.apiKey}`,
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: AIConfig.deepseek.model || 'deepseek-chat',
           messages: [
             ...(request.systemPrompt ? [{ role: 'system', content: request.systemPrompt }] : []),
-            { role: 'user', content: request.prompt }
+            { role: 'user', content: request.prompt + (request.metadata ? '\n\nMetadata Context:\n' + JSON.stringify(request.metadata, null, 2) : '') }
           ],
           temperature: request.temperature ?? 0.7,
           max_tokens: request.maxTokens,
         }),
+        signal: controller.signal
       });
 
-      const latencyMs = Date.now() - startTime;
+      clearTimeout(timeout);
+
+      const durationMs = Date.now() - startTime;
 
       if (!response.ok) {
-        let errorData: any;
+        console.error("DEEPSEEK ERROR STATUS:", response.status);
+        console.error("DEEPSEEK ERROR BODY:", await response.text());
+        let errorMessage = 'DeepSeek API Error';
         try {
-          errorData = await response.json();
+          const errorData = await response.json() as { error?: { message?: string }, detail?: string };
+          errorMessage = errorData.error?.message || errorData.detail || errorMessage;
         } catch {
-          errorData = { error: { message: response.statusText } };
+          errorMessage = response.statusText || errorMessage;
         }
         
         const isRetryable = response.status === 429 || response.status >= 500;
         
-        const error = new Error(errorData.error?.message || 'DeepSeek API Error') as AIError;
-        error.provider = this.name;
-        error.code = String(response.status);
-        error.retryable = isRetryable;
-        error.name = 'AIError';
-        throw error;
+        throw new AIError(
+          isRetryable ? 'AI_PROVIDER_UNAVAILABLE' : 'AI_INTERNAL_ERROR',
+          this.name,
+          errorMessage,
+          isRetryable
+        );
       }
 
-      const data = await response.json();
+      const data = await response.json() as {
+        model?: string;
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+      
+      const model = data.model || AIConfig.deepseek.model || 'deepseek-chat';
+      const content = data.choices?.[0]?.message?.content || '';
+      
+      let parsedData;
+      try {
+        let cleanContent = content;
+        if (cleanContent.startsWith('```json')) {
+          cleanContent = cleanContent.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+        } else if (cleanContent.startsWith('```')) {
+          cleanContent = cleanContent.replace(/^```\n?/, '').replace(/\n?```$/, '');
+        }
+        parsedData = JSON.parse(cleanContent);
+      } catch (e) {
+        parsedData = { content };
+      }
       
       return {
+        success: true,
         provider: this.name,
-        model: data.model || 'deepseek-chat',
-        content: data.choices?.[0]?.message?.content || '',
-        usage: {
-          promptTokens: data.usage?.prompt_tokens || 0,
-          completionTokens: data.usage?.completion_tokens || 0,
-          totalTokens: data.usage?.total_tokens || 0,
-        },
-        latencyMs,
-        requestId: data.id || `ds-${Date.now()}`,
+        model,
+        durationMs,
+        data: parsedData
       };
-    } catch (err: any) {
-      if (err.name === 'AIError') {
+    } catch (err: unknown) {
+      if (err instanceof AIError) {
         throw err;
       }
       
-      const latencyMs = Date.now() - startTime;
-      const error = new Error(err.message || 'Network Error') as AIError;
-      error.provider = this.name;
-      error.code = 'NETWORK_ERROR';
-      error.retryable = true; // Network errors are generally retryable
-      error.name = 'AIError';
-      throw error;
+      const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+      throw new AIError(
+        isTimeout ? 'AI_TIMEOUT' : 'AI_INTERNAL_ERROR',
+        this.name,
+        err instanceof Error ? err.message : 'Network Error',
+        true
+      );
     }
   }
+
+  async calculateSimilarity(text1: string, text2: string): Promise<number> {
+    throw new Error('Not implemented');
+  }
+
+  async detectAI(text: string): Promise<number> {
+    throw new Error('Not implemented');
+  }
+
+  async shutdown(): Promise<void> {}
 }
+
+

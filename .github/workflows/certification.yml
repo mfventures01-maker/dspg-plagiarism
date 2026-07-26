@@ -1,0 +1,54 @@
+name: DSPG Runtime Certification
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  certify:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        
+    - name: Install dependencies (npm ci)
+      run: npm ci
+      
+    - name: Static Analysis (Lint)
+      run: npm run lint
+      
+    - name: Typecheck
+      run: npm run lint # Assuming typecheck is part of the lint command based on package.json
+
+    - name: Build
+      run: npm run build
+      
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+      
+    - name: Run Playwright Tests
+      run: npx playwright test
+      
+    - name: Run Lighthouse Audit
+      run: npm run lighthouse
+      
+    - name: Verify Certificate Exists
+      run: |
+        ls -la certifications/certificates/DSPG_RUNTIME_CERTIFICATE.md
+        sha256sum certifications/certificates/DSPG_RUNTIME_CERTIFICATE.md
+        
+    - name: Upload Certification Evidence
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: dspg-certification-evidence
+        path: certifications/
+        retention-days: 30
