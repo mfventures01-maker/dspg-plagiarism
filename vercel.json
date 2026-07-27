@@ -9,19 +9,14 @@
       }
     },
     {
-      "src": "server.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "node_modules/pdf-parse/**"
-        ]
-      }
+      "src": "dist/server.cjs",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server.ts"
+      "dest": "dist/server.cjs"
     },
     {
       "src": "/assets/(.*)",
