@@ -9,15 +9,28 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 import mammoth from 'mammoth';
 import { randomUUID } from 'crypto';
-import { ExclusionEngine } from './src/services/ExclusionEngine.js';
-import { TopicRelevanceFilter } from './src/services/TopicRelevanceFilter.js';
-import { EnhancedSimilarityEngine } from './src/services/EnhancedSimilarityEngine.js';
-
 
 // Polyfill DOMMatrix for pdfjs-dist under Vercel Serverless environment
 if (typeof global !== 'undefined' && !(global as any).DOMMatrix) {
   (global as any).DOMMatrix = class DOMMatrix {};
 }
+
+// Phase 1: Quote & Bibliography Exclusion
+import { QuoteBibliographyExclusionEngine } from './src/services/QuoteBibliographyExclusionEngine.js';
+// Phase 2: Score Band Classification
+import { ScoreBandClassifier } from './src/services/ScoreBandClassifier.js';
+// Phase 3: Supervisor Review Workflow
+import { SupervisorReviewWorkflow } from './src/services/SupervisorReviewWorkflow.js';
+// Phase 4: PDF Export with QR Verification
+import { PDFReportGenerator } from './src/services/PDFReportGenerator.js';
+// Phase 5: Batch Processing
+import { BatchProcessingService } from './src/services/BatchProcessingService.js';
+
+const exclusionEngine = QuoteBibliographyExclusionEngine.getInstance();
+const classifier = ScoreBandClassifier.getInstance();
+const supervisorWorkflow = SupervisorReviewWorkflow.getInstance();
+const pdfGenerator = PDFReportGenerator.getInstance();
+const batchService = BatchProcessingService.getInstance();
 
 import { AIGateway } from './src/ai/gateway/AIGateway.js';
 import { QueueManager } from './src/services/queue/QueueManager.js';
@@ -26,6 +39,16 @@ dotenv.config();
 
 const app = express();
 const PORT = 3000;
+
+declare global {
+  var reportCache: Map<string, any>;
+}
+
+// Initialize cache at startup
+if (!global.reportCache) {
+  global.reportCache = new Map();
+}
+
 
 // — Structured Logging ——————————————————————————————————————————————————————
 
@@ -366,6 +389,33 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
     const { normalizeDocument } = await import('./src/ai/pipeline/documentNormalizer.js');
     const normalizedDoc = normalizeDocument(text);
 
+    // ============================================
+    // PHASE 1: Quote & Bibliography Exclusion
+    // ============================================
+    
+    console.log('[PHASE 1] Applying quote & bibliography exclusion...');
+    const exclusionResult = await exclusionEngine.excludeAll(normalizedDoc.normalizedText);
+    
+    console.log('[EXCLUSION] Summary:', exclusionResult.exclusionSummary);
+    console.log('[EXCLUSION] Quotes removed:', exclusionResult.excludedQuotes.length);
+    console.log('[EXCLUSION] Bibliography removed:', exclusionResult.excludedBibliography.length);
+    console.log('[EXCLUSION] Proofs generated:', exclusionResult.proofs.length);
+
+    // Use the clean text for similarity calculation
+    const cleanText = exclusionResult.cleanText;
+    
+    // Update normalizedDoc with cleaned text
+    const cleanedNormalizedDoc = {
+      ...normalizedDoc,
+      normalizedText: cleanText,
+      originalText: normalizedDoc.normalizedText,
+      exclusions: {
+        quotesRemoved: exclusionResult.excludedQuotes,
+        bibliographyRemoved: exclusionResult.excludedBibliography,
+        proofs: exclusionResult.proofs
+      }
+    };
+
     // — Research Federation Paper Lookup (Phase OA-005) ————————————————————————
     let papers: any[] = [];
     let query = '';
@@ -379,7 +429,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
       const startSearch = Date.now();
       const { CandidatePaperProvider } = await import('./src/services/evidence/CandidatePaperProvider.js');
       const provider = new CandidatePaperProvider();
-      papers = await provider.getCandidates(normalizedDoc.normalizedText);
+      papers = await provider.getCandidates(cleanText);
 
       federationMetrics = (papers as any).federationMetrics || { providers: [] };
       const coreMetrics = federationMetrics.providers.find((p: any) => p.name === 'CORE');
@@ -389,7 +439,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
       openAlexStatus = openAlexMetrics ? openAlexMetrics.status : 'FAILED';
 
       const { SearchQueryBuilder } = await import('./src/services/core/SearchQueryBuilder.js');
-      query = new SearchQueryBuilder().buildQuery(normalizedDoc.normalizedText);
+      query = new SearchQueryBuilder().buildQuery(cleanText);
       searchTime = Number(((Date.now() - startSearch) / 1000).toFixed(2));
 
       // Deterministic Tracing Logs (Phase EA-010K)
@@ -444,92 +494,262 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
       return;
     }
 
-    // — Similarity Calculation (Gate FG-A: SimilarityResult SSOT) ——————————————
-    let similarityResult: any = {
-      candidateId: 0,
-      overallSimilarity: 0,
-      chunkScores: [],
-      sentenceScores: [],
-      matchedChunks: [],
-      metrics: { exactMatch: 0, ngram: 0, jaccard: 0, cosine: 0 },
-      matchingChunks: []
-    };
+    // ============================================
+    // EXISTING SIMILARITY CALCULATION (Modified to use clean text)
+    // ============================================
 
-    let studentChunks: any[] = [];
-    if (papers.length > 0 && (coreStatus === 'SUCCESS' || openAlexStatus === 'SUCCESS')) {
-      try {
-        const { DocumentChunker } = await import('./src/services/evidence/DocumentChunker.js');
+    // Use the clean text for chunking and similarity
+    const { DocumentChunker } = await import('./src/services/evidence/DocumentChunker.js');
     const { CandidateChunker } = await import('./src/services/evidence/CandidateChunker.js');
     const { SimilarityEngine } = await import('./src/services/evidence/SimilarityEngine.js');
+    const { EnhancedSimilarityEngine } = await import('./src/services/EnhancedSimilarityEngine.js');
 
-    // Use the Enhanced Similarity Engine
+    // Use the enhanced engine with clean text
     const enhancedEngine = new EnhancedSimilarityEngine();
     const enhancedResult = enhancedEngine.computeEnhancedSimilarity(
-      normalizedDoc.normalizedText,
+      cleanText,
       papers
     );
 
-    console.log('[ENHANCED] Similarity Report:');
-    console.log(`  Overall: ${enhancedResult.overallSimilarity}%`);
-    console.log(`  Filtered: ${enhancedResult.filteredSimilarity}%`);
-    console.log(`  Adjusted: ${enhancedResult.adjustedSimilarity}%`);
-    console.log(`  Confidence: ${enhancedResult.confidenceScore}%`);
-    console.log(`  Recommendation: ${enhancedResult.recommendation}`);
-    console.log(`  Warnings: ${enhancedResult.warnings.length}`);
-
-    // Use adjusted similarity for the verdict
-    const overallSimVal = enhancedResult.adjustedSimilarity / 100;
-
-    // Replace the existing verdict calculation with enhanced version
-    let recommendation = "Accept";
-    let riskLevel = 'LOW';
-    let verdictText = "Document appears original with no significant matches.";
-
-    if (enhancedResult.recommendation === 'FLAG') {
-      recommendation = "Flagged for Review";
-      riskLevel = 'HIGH';
-      verdictText = "⚠️ Sources from unrelated fields detected. Manual review required.";
-    } else if (enhancedResult.recommendation === 'REVIEW') {
-      recommendation = "Manual Review Required";
-      riskLevel = 'MODERATE';
-      verdictText = "⚠️ Some matches detected. Manual review recommended.";
-    } else {
-      recommendation = "Accept";
-      riskLevel = 'LOW';
-      verdictText = "✅ Document appears original.";
-    }
-
-    const aiGenRisk = "LOW";
+    // ============================================
+    // PHASE 2: Score Band Classification
+    // ============================================
     
+    console.log('[PHASE 2] Classifying score band...');
+    const overallSimVal = enhancedResult.adjustedSimilarity / 100;
+    const classification = classifier.classify(
+      overallSimVal * 100, 
+      enhancedResult.adjustedSimilarity
+    );
+
+    console.log('[CLASSIFICATION] Band:', classification.band.name);
+    console.log('[CLASSIFICATION] Risk Level:', classification.band.riskLevel);
+    console.log('[CLASSIFICATION] Recommendation:', classification.band.recommendation);
+
+    // Generate classification proof
+    const classificationProof = await classifier.generateClassificationProof(
+      cleanText,
+      overallSimVal * 100,
+      enhancedResult.adjustedSimilarity,
+      classification.band
+    );
+
+    console.log('[CLASSIFICATION] Proof generated:', classificationProof.id);
+
+    // ============================================
+    // EXISTING VERDICT ENGINE (Enhanced with classification)
+    // ============================================
+
+    // Use classification results in verdict
     const verdict = {
       academicIntegrityScore: Math.round((1.0 - overallSimVal) * 100),
       originality: Math.round((1.0 - overallSimVal) * 100),
       copiedContent: Math.round(overallSimVal * 100),
-      aiGenerated: aiGenRisk === "HIGH" ? 85 : aiGenRisk === "MODERATE" ? 28 : 5,
-      humanWritten: 0, // calculated below
-      recommendation: recommendation,
-      riskLevel: riskLevel,
+      aiGenerated: 5,
+      humanWritten: 95,
+      recommendation: classification.band.recommendation,
+      riskLevel: classification.band.riskLevel,
       riskScore: Math.round(overallSimVal * 100),
-      verdictText: verdictText
+      verdictText: classification.band.description,
+      scoreBand: classification.band.name,
+      bandId: classification.band.id
     };
+
+    // ============================================
+    // PHASE 3: Supervisor Review Workflow
+    // ============================================
+    
+    console.log('[PHASE 3] Creating review task...');
+    
+    // Get metadata from request
+    try {
+      if (req.body.metadata) {
+        metadata = JSON.parse(req.body.metadata);
+      }
+    } catch (err) {
+      // Metadata parsing error handled elsewhere
+    }
+
+    // Create review task
+    const reviewTask = supervisorWorkflow.createReviewTask(
+      metadata?.students?.[0]?.fullName || 'Unknown Student',
+      metadata?.students?.[0]?.matricNumber || 'Unknown Matric',
+      metadata?.projectTitle || 'Untitled Project',
+      cleanedNormalizedDoc.hash || 'unknown-hash',
+      overallSimVal * 100,
+      enhancedResult.adjustedSimilarity,
+      classification.band.name,
+      'SUP_001', // Default supervisor ID
+      metadata?.department || 'Computer Engineering',
+      metadata?.level || 'HND 2'
+    );
+
+    console.log('[REVIEW] Task created:', reviewTask.id);
+    console.log('[REVIEW] Status:', reviewTask.status);
+
+    // ============================================
+    // PHASE 4: PDF Report Generation
+    // ============================================
+    
+    console.log('[PHASE 4] Generating PDF report...');
+    
+    // Get supervisor name from metadata or use default
+    const supervisorName = metadata?.supervisor || 'Dr. Abugewa';
+    
+    // Generate PDF report
+    const pdfReport = await pdfGenerator.generatePDF({
+      reportId: `DSPG-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      studentName: metadata?.students?.[0]?.fullName || 'Unknown Student',
+      matricNumber: metadata?.students?.[0]?.matricNumber || 'Unknown Matric',
+      projectTitle: metadata?.projectTitle || 'Untitled Project',
+      submissionDate: new Date().toISOString(),
+      similarityScore: overallSimVal * 100,
+      adjustedScore: enhancedResult.adjustedSimilarity,
+      scoreBand: classification.band.name,
+      riskLevel: classification.band.riskLevel,
+      verdict: classification.band.recommendation,
+      supervisorName: supervisorName,
+      supervisorSignature: supervisorName,
+      verificationHash: classificationProof.verifier,
+      matchedSources: enhancedResult.matchedChunks.slice(0, 10).map((chunk: any) => ({
+        source: chunk.sourceText,
+        similarity: chunk.similarity,
+        text: chunk.studentText
+      })),
+      documentHash: cleanedNormalizedDoc.hash || 'unknown',
+      institution: 'Delta State Polytechnic, Ogwashi-Uku',
+      department: metadata?.department || 'Computer Engineering'
+    });
+
+    console.log('[PDF] Report generated:', pdfReport.verificationData.reportId);
+    console.log('[PDF] QR Code generated:', pdfReport.qrCode ? 'Yes' : 'No');
+
+    // ============================================
+    // PHASE 5: Batch Processing (if applicable)
+    // ============================================
+    
+    // Note: Batch processing is handled via separate endpoints
+    // But we can track if this is part of a batch job
+    const batchJobId = req.headers['x-batch-job-id'] as string || null;
+    if (batchJobId) {
+      console.log('[BATCH] Part of batch job:', batchJobId);
+    }
+    
+    // AI Interpretation logic for FG-B
+    const promptToGemini = `
+You are an expert academic integrity analyzer. Be precise and deterministic.
+Analyze the following student text against the retrieved CORE and OpenAlex research evidence.
+You MUST ONLY explain and interpret the existing mathematical and retrieval evidence. Do NOT invent, override, or modify any similarity percentages, confidence scores, verdicts, or recommendations.
+
+Student Text:
+${cleanedNormalizedDoc.normalizedText}
+
+Evidence Assessment:
+- Retrieval State: SUCCESS
+- Similarity State: COMPUTED
+- Overall Similarity Score: ${Math.round(overallSimVal * 100)}%
+- Plagiarism Risk Level: ${classification.band.riskLevel}
+- Recommendation: ${classification.band.recommendation}
+
+Analyze the similarity findings, AI generation patterns, and paraphrasing indicators.
+Explain WHY the paper is considered copied or original based only on the evidence.
+You MUST respond with a valid JSON object matching the following structure:
+{
+  "aiGenerationRisk": "HIGH" | "MODERATE" | "LOW",
+  "reasoning": [
+    "string explanation detail 1",
+    "string explanation detail 2"
+  ]
+}
+Do NOT include markdown wrapping other than the JSON block. Do NOT hallucinate.
+`;
+
+    const aiResponse = await aiGateway.analyzeDocument({
+      prompt: promptToGemini,
+      systemPrompt: 'You are an expert academic integrity analyzer. Be precise and deterministic.',
+      metadata: metadata,
+    });
+    const geminiData = aiResponse.data || {};
+    const aiGenRisk = geminiData.aiGenerationRisk || "LOW";
+    verdict.aiGenerated = aiGenRisk === "HIGH" ? 85 : aiGenRisk === "MODERATE" ? 28 : 5;
     verdict.humanWritten = 100 - verdict.aiGenerated;
     
     const finalAiResponse = {
-      verdict: riskLevel === 'LOW' ? 'Original' : riskLevel === 'MODERATE' ? 'Suspicious' : 'Plagiarism Detected',
+      verdict: classification.band.riskLevel === 'LOW' ? 'Original' : classification.band.riskLevel === 'MODERATE' ? 'Suspicious' : 'Plagiarism Detected',
       similarityScore: Math.round(overallSimVal * 100),
-      reasoning: verdictText,
-      recommendations: [recommendation, "Review candidate papers for overlapping phrases."],
+      reasoning: geminiData.reasoning ? geminiData.reasoning.join(' ') : classification.band.description,
+      recommendations: [classification.band.recommendation, "Review candidate papers for overlapping phrases."],
       provider: "Gemini",
       model: "gemini-2.5-flash",
       durationMs: 1200
     };
+    
+    const durationMs = Date.now() - startTime;
+    cleanedNormalizedDoc.analysisDuration = `${(durationMs / 1000).toFixed(1)}s`;
 
-    // Add enhanced data to the response
-    res.json({
+    // ============================================
+    // RESPONSE WITH ALL PHASES INTEGRATED
+    // ============================================
+
+    const responseData = {
       success: true,
       data: {
-        document: normalizedDoc,
-        aiAnalysis: finalAiResponse,
+        document: {
+          ...cleanedNormalizedDoc,
+          exclusions: {
+            quotesRemoved: exclusionResult.excludedQuotes,
+            bibliographyRemoved: exclusionResult.excludedBibliography,
+            totalExcluded: exclusionResult.exclusionSummary.totalExcluded
+          }
+        },
+        
+        // Phase 1: Exclusion Results
+        exclusion: {
+          summary: exclusionResult.exclusionSummary,
+          proofs: exclusionResult.proofs.map(p => ({
+            id: p.id,
+            type: p.exclusionType,
+            timestamp: p.timestamp,
+            verifier: p.verifier.substring(0, 16) + '...'
+          }))
+        },
+        
+        // Phase 2: Classification Results
+        classification: {
+          band: classification.band,
+          originalScore: classification.originalScore,
+          adjustedScore: classification.adjustedScore,
+          proof: {
+            id: classificationProof.id,
+            timestamp: classificationProof.timestamp,
+            confidence: classificationProof.confidence,
+            verifier: classificationProof.verifier.substring(0, 16) + '...'
+          }
+        },
+        
+        // Phase 3: Review Workflow
+        review: {
+          taskId: reviewTask.id,
+          status: reviewTask.status,
+          assignedTo: reviewTask.assignedTo,
+          timeline: reviewTask.timeline,
+          proof: reviewTask.proof ? {
+            id: reviewTask.proof.id,
+            status: reviewTask.proof.status,
+            timestamp: reviewTask.proof.timestamp,
+            verifier: reviewTask.proof.verifier.substring(0, 16) + '...'
+          } : null
+        },
+        
+        // Phase 4: PDF Report
+        report: {
+          reportId: pdfReport.verificationData.reportId,
+          qrCode: pdfReport.qrCode,
+          verificationData: pdfReport.verificationData,
+          downloadUrl: `/api/report/${pdfReport.verificationData.reportId}/download`
+        },
+        
+        // Existing data
         similarity: {
           raw: enhancedResult.overallSimilarity,
           filtered: enhancedResult.filteredSimilarity,
@@ -538,55 +758,53 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
           recommendation: enhancedResult.recommendation,
           warnings: enhancedResult.warnings,
           sourceCategories: enhancedResult.sourceCategories,
-          exclusionSummary: enhancedResult.exclusionSummary,
-          topicSummary: enhancedResult.topicSummary,
           matchedChunks: enhancedResult.matchedChunks.slice(0, 10)
         },
-        coreSearch: [],
-        coreStatus,
-        openAlexStatus,
-        federationMetrics,
-        similarityStatus: "COMPUTED",
-        evidenceTable: enhancedResult.matchedChunks.slice(0, 5).map(chunk => ({
-          studentText: chunk.studentText,
-          source: chunk.sourceText,
-          similarity: chunk.similarity,
-          topicRelevance: chunk.topicRelevance.isRelevant ? '✅ Relevant' : '⚠️ Non-Relevant',
-          field: chunk.topicRelevance.detectedField
-        })),
-        highlightedMatches: enhancedResult.matchedChunks.slice(0, 10).map(chunk => ({
-          studentText: chunk.studentText,
-          source: chunk.sourceText,
-          matchedParagraph: 1,
-          similarity: chunk.similarity,
-          isExcluded: chunk.isExcluded,
-          adjustedSimilarity: chunk.adjustedSimilarity
-        })),
-        confidence: {
-          coreConfidence: 95,
-          geminiConfidence: 95,
-          overallConfidence: 95,
-          enhancedConfidence: enhancedResult.confidenceScore
-        },
+        
+        verdict: verdict,
         sources: [],
-        heatMap: [],
-        aiExplanation: "",
-        verdict: {
-          ...verdict,
-          enhancedRecommendation: recommendation,
-          enhancedRiskLevel: riskLevel,
-          enhancedVerdictText: verdictText
-        },
+        aiAnalysis: finalAiResponse,
         evidenceAssessment: {
-            retrievalState: "SUCCESS_WITH_CANDIDATES",
-            similarityState: "MATCH_FOUND"
+          retrievalState: "SUCCESS_WITH_CANDIDATES",
+          similarityState: "MATCH_FOUND"
         },
         repositoryIntelligence: {
             mergedCandidates: papers.length
         },
+        confidence: {
+          coreConfidence: coreStatus === 'SUCCESS' ? 95 : 0,
+          geminiConfidence: 95,
+          overallConfidence: enhancedResult.confidenceScore,
+          classificationConfidence: classificationProof.confidence
+        },
         candidatePapers: papers
       }
+    };
+
+    // ============================================
+    // STORE REPORT FOR DOWNLOAD (Optional)
+    // ============================================
+    
+    if (!global.reportCache) {
+      global.reportCache = new Map();
+    }
+    global.reportCache.set(pdfReport.verificationData.reportId, {
+      pdf: pdfReport.pdf,
+      data: responseData.data
     });
+
+    log({
+      timestamp: new Date().toISOString(), 
+      requestId,
+      route: 'POST /api/analyze', 
+      fileName, 
+      mimeType,
+      status: 'SUCCESS', 
+      duration: elapsed(),
+    });
+
+    res.json(responseData);
+
 
   } catch (error: any) {
     log({
