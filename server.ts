@@ -1,3 +1,5 @@
+# Create a clean version without conflict markers
+@'
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -8,7 +10,6 @@ import path from 'path';
 import multer from 'multer';
 import dotenv from 'dotenv';
 import mammoth from 'mammoth';
-<<<<<<< HEAD
 import { randomUUID } from 'crypto';
 
 // Polyfill DOMMatrix for pdfjs-dist under Vercel Serverless environment
@@ -18,18 +19,13 @@ if (typeof global !== 'undefined' && !(global as any).DOMMatrix) {
 
 import { AIGateway } from './src/ai/gateway/AIGateway.js';
 import { QueueManager } from './src/services/queue/QueueManager.js';
-=======
-
-import { createServer as createViteServer } from 'vite';
-import { GoogleGenAI, Type } from '@google/genai';
->>>>>>> cb08f3e685e88811fba8aa0638acc5b4bc17e57b
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
 
-// ── Structured Logging ────────────────────────────────────────────────────────
+// — Structured Logging ——————————————————————————————————————————————————————
 
 interface LogEntry {
   timestamp: string;
@@ -62,7 +58,7 @@ function log(entry: LogEntry): void {
   }
 }
 
-// ── API Response Helpers ──────────────────────────────────────────────────────
+// — API Response Helpers ——————————————————————————————————————————————————————
 
 function apiError(
   res: express.Response,
@@ -78,31 +74,31 @@ function apiError(
   });
 }
 
-// ── File Upload ───────────────────────────────────────────────────────────────
+// — File Upload ———————————————————————————————————————————————————————————————
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
-// ── AI Gateway ────────────────────────────────────────────────────────────────
+// — AI Gateway ————————————————————————————————————————————————————————————————
 
 const aiGateway = new AIGateway();
 const queueManager = new QueueManager();
 
-// ── Request ID Middleware ─────────────────────────────────────────────────────
+// — Request ID Middleware ——————————————————————————————————————————————————————
 
 app.use((req, _res, next) => {
   (req as any).requestId = randomUUID();
   next();
 });
 
-// ── Standard Middleware ───────────────────────────────────────────────────────
+// — Standard Middleware ————————————————————————————————————————————————————————
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
+// — CORS ——————————————————————————————————————————————————————————————————————
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -121,7 +117,7 @@ app.use((req, res, next) => {
   }
 });
 
-// ── Health Check ──────────────────────────────────────────────────────────────
+// — Health Check ———————————————————————————————————————————————————————————————
 
 app.get('/api/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok', timestamp: new Date().toISOString() } });
@@ -144,7 +140,7 @@ app.get('/health/runtime', async (_req, res) => {
 
   const aiHealthy = !!aiGateway ? 'healthy' : 'degraded';
   const uploadHealthy = !!upload ? 'healthy' : 'degraded';
-  
+
   res.json({
     build: 'pass',
     ai: aiHealthy,
@@ -157,13 +153,13 @@ app.get('/health/runtime', async (_req, res) => {
   });
 });
 
-// ── Document Analysis and Plagiarism Detection API ────────────────────────────
+// — Document Analysis and Plagiarism Detection API ————————————————————————————
 
 // New async endpoint with 202 Accepted
 app.post('/api/analyze/async', async (req, res) => {
   try {
     const { documentText, documentName } = req.body;
-    
+
     if (!documentText) {
       return res.status(400).json({ error: 'Document text is required' });
     }
@@ -229,7 +225,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
   let mimeType = 'text/plain';
 
   try {
-    // ── Text Extraction ───────────────────────────────────────────────────────
+    // — Text Extraction ——————————————————————————————————————————————————————
     if (req.file) {
       fileName = req.file.originalname;
       mimeType = req.file.mimetype;
@@ -244,7 +240,6 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
         text = mammothResult.value;
 
       } else if (extension === 'pdf') {
-<<<<<<< HEAD
         try {
           const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js');
           const pdfParse = pdfParseModule.default || pdfParseModule;
@@ -298,21 +293,6 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
           return;
         }
 
-=======
-        if (typeof (global as any).DOMMatrix === 'undefined') {
-          (global as any).DOMMatrix = class DOMMatrix {};
-        }
-        if (typeof (global as any).ImageData === 'undefined') {
-          (global as any).ImageData = class ImageData {};
-        }
-        if (typeof (global as any).Path2D === 'undefined') {
-          (global as any).Path2D = class Path2D {};
-        }
-        const { PDFParse } = await import('pdf-parse');
-        const parser = new PDFParse({ data: buffer });
-        const pdfData = await parser.getText();
-        text = pdfData.text;
->>>>>>> cb08f3e685e88811fba8aa0638acc5b4bc17e57b
       } else {
         log({
           timestamp: new Date().toISOString(), requestId,
@@ -328,7 +308,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
       }
     }
 
-    // ── Input Validation ──────────────────────────────────────────────────────
+    // — Input Validation ——————————————————————————————————————————————————————
     if (!text || text.trim().length < 10) {
       log({
         timestamp: new Date().toISOString(), requestId,
@@ -343,7 +323,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
       return;
     }
 
-    // ── Metadata Validation ───────────────────────────────────────────────────
+    // — Metadata Validation ———————————————————————————————————————————————————
     let metadata;
     try {
       if (req.body.metadata) {
@@ -354,7 +334,6 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
       return;
     }
 
-<<<<<<< HEAD
     if (metadata) {
       if (!metadata.projectTitle || typeof metadata.projectTitle !== 'string') {
         apiError(res, 400, 'INVALID_PROJECT_TITLE', 'Project title is required and must be a string');
@@ -372,85 +351,6 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
         if (!student.fullName || !student.matricNumber) {
           apiError(res, 400, 'INVALID_STUDENT_DETAILS', 'Each student must have a full name and matric number');
           return;
-=======
-    // Get Gemini client securely
-    const ai = getGeminiClient();
-
-    // Request analysis from Gemini with a structured schema
-    const prompt = `
-You are the advanced Academic Plagiarism Checker & Style Analysis System of the Delta State Polytechnic Ogwashi-Uku, School of Engineering, HND Projects Committee.
-Your task is to perform an exhaustive, rigorous, and highly detailed originality and plagiarism analysis on the following submitted text.
-
-Analyze the text for:
-1. Plagiarism & Copying: Search your knowledge graph for exact or semantic matches with textbooks, IEEE/academic research papers, online libraries, standard engineering codes, and websites. Identify similarity percentages.
-2. AI-generated Content: Detect typical AI style patterns, perplexity, burstiness, vocabulary indicators, and repetitive structure to determine the AI-generated content probability.
-3. Formulate an academic executive summary customized for the Delta State Polytechnic Ogwashi-Uku School of Engineering standards. The "summary" field in the JSON response must strictly structure the text to include the following labeled sections:
-   - EXECUTIVE SUMMARY: [detailed overview of original versus matching text]
-   - SIMILARITY SCORE: [the similarity score computed as (100 - originalityScore)%]
-   - FINDINGS: [detailed plagiarism and style findings]
-   - RECOMMENDATIONS: [committee guidelines and compliance actions]
-
-Provide a structured, detailed JSON response adhering exactly to the specified JSON schema. Do not include markdown code block syntax around the JSON inside the text response itself, return raw JSON string.
-
-Submitted Text to Analyze:
-"""
-${text}
-"""
-    `;
-
-    let response;
-    const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
-    let lastErr = null;
-
-    for (const modelName of candidateModels) {
-      try {
-        response = await ai.models.generateContent({
-          model: modelName,
-          contents: prompt,
-          config: {
-            systemInstruction: 'You are a senior academic auditor specializing in engineering papers, representing Delta State Polytechnic Ogwashi-Uku.',
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                originalityScore: {
-                  type: Type.INTEGER,
-                  description: 'The overall originality percentage (0-100), where 100 means fully original, 0 means entirely plagiarized.',
-                },
-                aiProbability: {
-                  type: Type.INTEGER,
-                  description: 'The probability that the text was written by an AI language model (0-100).',
-                },
-                flaggedSections: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: 'A list of distinct key phrases or sections flagged for similarity/plagiarism.',
-                },
-                summary: {
-                  type: Type.STRING,
-                  description: 'Executive summary detailing specific findings, Nigerian engineering context, and HND Projects Committee compliance statements.',
-                },
-                sources: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      text: { type: Type.STRING, description: 'The exact phrase or text segment matched.' },
-                      source: { type: Type.STRING, description: 'The source publication, website, standard, or database matched (e.g. "IEEE Transactions on Power Systems", "Delta State Library Archive").' },
-                      similarity: { type: Type.INTEGER, description: 'Percentage similarity of this specific segment (0-100).' },
-                    },
-                    required: ['text', 'source', 'similarity'],
-                  },
-                  description: 'A detailed table mapping matches to potential academic or online sources.',
-                },
-              },
-              required: ['originalityScore', 'aiProbability', 'flaggedSections', 'summary', 'sources'],
-            },
-          },
-        });
-        if (response && response.text) {
-          break;
->>>>>>> cb08f3e685e88811fba8aa0638acc5b4bc17e57b
         }
       }
       const matricNumbers = metadata.students.map((s: any) => s.matricNumber);
@@ -460,11 +360,11 @@ ${text}
       }
     }
 
-    // ── Document Normalization (Phase P2.1) ───────────────────────────────────
+    // — Document Normalization (Phase P2.1) ————————————————————————————————————
     const { normalizeDocument } = await import('./src/ai/pipeline/documentNormalizer.js');
     const normalizedDoc = normalizeDocument(text);
 
-    // ── Research Federation Paper Lookup (Phase OA-005) ────────────────────────
+    // — Research Federation Paper Lookup (Phase OA-005) ————————————————————————
     let papers: any[] = [];
     let query = '';
     let coreStatus: 'SUCCESS' | 'FAILED' = 'SUCCESS';
@@ -478,14 +378,14 @@ ${text}
       const { CandidatePaperProvider } = await import('./src/services/evidence/CandidatePaperProvider.js');
       const provider = new CandidatePaperProvider();
       papers = await provider.getCandidates(normalizedDoc.normalizedText);
-      
+
       federationMetrics = (papers as any).federationMetrics || { providers: [] };
       const coreMetrics = federationMetrics.providers.find((p: any) => p.name === 'CORE');
       const openAlexMetrics = federationMetrics.providers.find((p: any) => p.name === 'OpenAlex');
-      
+
       coreStatus = coreMetrics ? coreMetrics.status : 'FAILED';
       openAlexStatus = openAlexMetrics ? openAlexMetrics.status : 'FAILED';
-      
+
       const { SearchQueryBuilder } = await import('./src/services/core/SearchQueryBuilder.js');
       query = new SearchQueryBuilder().buildQuery(normalizedDoc.normalizedText);
       searchTime = Number(((Date.now() - startSearch) / 1000).toFixed(2));
@@ -521,13 +421,13 @@ ${text}
       const { AcademicEvidenceGraph } = await import('./src/services/evidence/AcademicEvidenceGraph.js');
       const evidenceGraph = new AcademicEvidenceGraph(papers);
       console.log('Evidence Graph Built');
-      
+
       const bothFailed = federationMetrics.providers.every((p: any) => p.status === 'FAILED');
       if (bothFailed) {
         apiError(res, 400, 'NO_ACADEMIC_EVIDENCE_AVAILABLE', 'No academic evidence was retrieved from any provider.');
         return;
       }
-      
+
       if (papers.length === 0) {
         similarityStatus = 'NOT_AVAILABLE';
       }
@@ -542,7 +442,7 @@ ${text}
       return;
     }
 
-    // ── Similarity Calculation (Gate FG-A: SimilarityResult SSOT) ─────────────
+    // — Similarity Calculation (Gate FG-A: SimilarityResult SSOT) ——————————————
     let similarityResult: any = {
       candidateId: 0,
       overallSimilarity: 0,
@@ -579,7 +479,7 @@ ${text}
 
     const overallSimVal = similarityResult.overallSimilarity;
 
-    // ── Gate FG-B: Verdict Engine ─────────────────────────────────────────────
+    // — Gate FG-B: Verdict Engine ——————————————————————————————————————————————
     const matchedSources = papers.length;
     let retrievalState: "SUCCESS_WITH_CANDIDATES" | "SUCCESS_NO_CANDIDATES" | "PARTIAL_SUCCESS" | "PROVIDER_FAILURE" = "SUCCESS_NO_CANDIDATES";
     if (coreStatus === 'SUCCESS' && openAlexStatus === 'SUCCESS') {
@@ -637,7 +537,7 @@ ${text}
       verdictText
     };
 
-    // ── Gate FG-B: Confidence Engine ──────────────────────────────────────────
+    // — Gate FG-B: Confidence Engine ———————————————————————————————————————————
     const provAvailability = (coreStatus === 'SUCCESS' ? 0.5 : 0) + (openAlexStatus === 'SUCCESS' ? 0.5 : 0);
     const candidatesWeight = papers.length > 0 ? Math.min(papers.length / 5, 1.0) : 0.0;
     const evidenceQuality = similarityResult.confidence?.score ?? 0.5;
@@ -682,7 +582,7 @@ ${text}
       mergedCandidates: papers.length
     };
 
-    // ── AI Plagiarism Analysis (Gate FG-B: Facts from Interpretation) ─────────
+    // — AI Plagiarism Analysis (Gate FG-B: Facts from Interpretation) ——————————
     const promptToGemini = `
 You are an expert academic integrity analyzer. Be precise and deterministic.
 Analyze the following student text against the retrieved CORE and OpenAlex research evidence.
@@ -722,7 +622,7 @@ Do NOT include markdown wrapping other than the JSON block. Do NOT hallucinate.
       systemPrompt: 'You are an expert academic integrity analyzer. Be precise and deterministic.',
       metadata: metadata,
     });
-    
+
     const durationMs = Date.now() - startTime;
     normalizedDoc.analysisDuration = `${(durationMs / 1000).toFixed(1)}s`;
 
@@ -751,7 +651,7 @@ Do NOT include markdown wrapping other than the JSON block. Do NOT hallucinate.
     const sentenceScores = similarityResult.sentenceScores ?? [];
     const chunkScores = similarityResult.chunkScores ?? [];
 
-    // ── Build the v2.0 Glass Box Evidence Package ────────────────────────────
+    // — Build the v2.0 Glass Box Evidence Package ——————————————————————————————
     const coreSearch = {
       query: query || "N/A",
       totalResults: papers.length,
@@ -815,15 +715,15 @@ Do NOT include markdown wrapping other than the JSON block. Do NOT hallucinate.
 
     const heatMap = chunkScores.map((score: number) => Math.round(score * 100));
 
-    const aiExplanation = geminiData.reasoning?.join(' ') || 
+    const aiExplanation = geminiData.reasoning?.join(' ') ||
       (similarityState === "NOT_MEASURABLE"
         ? "CORE and OpenAlex were queried using the extracted concepts from your dissertation. No comparable publications matching the search criteria were returned during this analysis. Consequently, no similarity percentage could be calculated."
         : `The scanned document shows a similarity index of ${(overallSimVal * 100).toFixed(1)}%.`);
 
     console.log(`[server.ts] 📊 Sources concepts: ${sources[0]?.concepts?.join(', ') || 'EMPTY'}`);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       data: {
         document: normalizedDoc,
         aiAnalysis: finalAiResponse,
@@ -842,7 +742,7 @@ Do NOT include markdown wrapping other than the JSON block. Do NOT hallucinate.
         evidenceAssessment,
         repositoryIntelligence,
         candidatePapers: papers
-      } 
+      }
     });
 
   } catch (error: any) {
@@ -860,7 +760,7 @@ Do NOT include markdown wrapping other than the JSON block. Do NOT hallucinate.
   }
 });
 
-// ── Vite & Static Asset Mounting ──────────────────────────────────────────────
+// — Vite & Static Asset Mounting ———————————————————————————————————————————————
 
 async function start() {
   if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
@@ -890,3 +790,4 @@ start().catch((err) => {
 });
 
 export default app;
+'@ | Set-Content server.ts
