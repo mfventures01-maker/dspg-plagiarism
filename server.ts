@@ -8,6 +8,7 @@ import path from 'path';
 import multer from 'multer';
 import dotenv from 'dotenv';
 import mammoth from 'mammoth';
+<<<<<<< HEAD
 import { randomUUID } from 'crypto';
 
 // Polyfill DOMMatrix for pdfjs-dist under Vercel Serverless environment
@@ -17,6 +18,11 @@ if (typeof global !== 'undefined' && !(global as any).DOMMatrix) {
 
 import { AIGateway } from './src/ai/gateway/AIGateway.js';
 import { QueueManager } from './src/services/queue/QueueManager.js';
+=======
+
+import { createServer as createViteServer } from 'vite';
+import { GoogleGenAI, Type } from '@google/genai';
+>>>>>>> cb08f3e685e88811fba8aa0638acc5b4bc17e57b
 
 dotenv.config();
 
@@ -238,6 +244,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
         text = mammothResult.value;
 
       } else if (extension === 'pdf') {
+<<<<<<< HEAD
         try {
           const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js');
           const pdfParse = pdfParseModule.default || pdfParseModule;
@@ -291,6 +298,21 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
           return;
         }
 
+=======
+        if (typeof (global as any).DOMMatrix === 'undefined') {
+          (global as any).DOMMatrix = class DOMMatrix {};
+        }
+        if (typeof (global as any).ImageData === 'undefined') {
+          (global as any).ImageData = class ImageData {};
+        }
+        if (typeof (global as any).Path2D === 'undefined') {
+          (global as any).Path2D = class Path2D {};
+        }
+        const { PDFParse } = await import('pdf-parse');
+        const parser = new PDFParse({ data: buffer });
+        const pdfData = await parser.getText();
+        text = pdfData.text;
+>>>>>>> cb08f3e685e88811fba8aa0638acc5b4bc17e57b
       } else {
         log({
           timestamp: new Date().toISOString(), requestId,
@@ -332,6 +354,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
       return;
     }
 
+<<<<<<< HEAD
     if (metadata) {
       if (!metadata.projectTitle || typeof metadata.projectTitle !== 'string') {
         apiError(res, 400, 'INVALID_PROJECT_TITLE', 'Project title is required and must be a string');
@@ -349,6 +372,85 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
         if (!student.fullName || !student.matricNumber) {
           apiError(res, 400, 'INVALID_STUDENT_DETAILS', 'Each student must have a full name and matric number');
           return;
+=======
+    // Get Gemini client securely
+    const ai = getGeminiClient();
+
+    // Request analysis from Gemini with a structured schema
+    const prompt = `
+You are the advanced Academic Plagiarism Checker & Style Analysis System of the Delta State Polytechnic Ogwashi-Uku, School of Engineering, HND Projects Committee.
+Your task is to perform an exhaustive, rigorous, and highly detailed originality and plagiarism analysis on the following submitted text.
+
+Analyze the text for:
+1. Plagiarism & Copying: Search your knowledge graph for exact or semantic matches with textbooks, IEEE/academic research papers, online libraries, standard engineering codes, and websites. Identify similarity percentages.
+2. AI-generated Content: Detect typical AI style patterns, perplexity, burstiness, vocabulary indicators, and repetitive structure to determine the AI-generated content probability.
+3. Formulate an academic executive summary customized for the Delta State Polytechnic Ogwashi-Uku School of Engineering standards. The "summary" field in the JSON response must strictly structure the text to include the following labeled sections:
+   - EXECUTIVE SUMMARY: [detailed overview of original versus matching text]
+   - SIMILARITY SCORE: [the similarity score computed as (100 - originalityScore)%]
+   - FINDINGS: [detailed plagiarism and style findings]
+   - RECOMMENDATIONS: [committee guidelines and compliance actions]
+
+Provide a structured, detailed JSON response adhering exactly to the specified JSON schema. Do not include markdown code block syntax around the JSON inside the text response itself, return raw JSON string.
+
+Submitted Text to Analyze:
+"""
+${text}
+"""
+    `;
+
+    let response;
+    const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+    let lastErr = null;
+
+    for (const modelName of candidateModels) {
+      try {
+        response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+          config: {
+            systemInstruction: 'You are a senior academic auditor specializing in engineering papers, representing Delta State Polytechnic Ogwashi-Uku.',
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                originalityScore: {
+                  type: Type.INTEGER,
+                  description: 'The overall originality percentage (0-100), where 100 means fully original, 0 means entirely plagiarized.',
+                },
+                aiProbability: {
+                  type: Type.INTEGER,
+                  description: 'The probability that the text was written by an AI language model (0-100).',
+                },
+                flaggedSections: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: 'A list of distinct key phrases or sections flagged for similarity/plagiarism.',
+                },
+                summary: {
+                  type: Type.STRING,
+                  description: 'Executive summary detailing specific findings, Nigerian engineering context, and HND Projects Committee compliance statements.',
+                },
+                sources: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      text: { type: Type.STRING, description: 'The exact phrase or text segment matched.' },
+                      source: { type: Type.STRING, description: 'The source publication, website, standard, or database matched (e.g. "IEEE Transactions on Power Systems", "Delta State Library Archive").' },
+                      similarity: { type: Type.INTEGER, description: 'Percentage similarity of this specific segment (0-100).' },
+                    },
+                    required: ['text', 'source', 'similarity'],
+                  },
+                  description: 'A detailed table mapping matches to potential academic or online sources.',
+                },
+              },
+              required: ['originalityScore', 'aiProbability', 'flaggedSections', 'summary', 'sources'],
+            },
+          },
+        });
+        if (response && response.text) {
+          break;
+>>>>>>> cb08f3e685e88811fba8aa0638acc5b4bc17e57b
         }
       }
       const matricNumbers = metadata.students.map((s: any) => s.matricNumber);
