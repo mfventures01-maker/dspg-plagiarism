@@ -1,5 +1,3 @@
-# Create a clean version without conflict markers
-@'
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -790,4 +788,3 @@ start().catch((err) => {
 });
 
 export default app;
-'@ | Set-Content server.ts
