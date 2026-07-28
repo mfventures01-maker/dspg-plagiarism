@@ -17,6 +17,7 @@ import { ResultCard } from './ResultCard';
 import { ProgressIndicator } from './ProgressIndicator';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorBoundary } from './ErrorBoundary';
+import { PublicCounter } from './PublicCounter';
 import { usePlagiarismCheck } from '../hooks/usePlagiarismCheck';
 import { useFileUpload } from '../hooks/useFileUpload';
 import { CommitteeData, Student, ProjectMetadata } from '../types';
@@ -300,6 +301,7 @@ export const PlagiarismChecker: React.FC = () => {
                   <p className="text-sm font-medium text-slate-200 tracking-wider">
                     {Branding.institution}
                   </p>
+                  <div className="mt-4"><PublicCounter /></div>
                   <div className="flex flex-wrap gap-2 mt-2">
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                       <ShieldCheck className="h-3 w-3" /> Academic Integrity Compliant
@@ -693,6 +695,20 @@ export const PlagiarismChecker: React.FC = () => {
                   {state.normalizedDoc.aiAnalysis && (
                     <div className="ai-verdict-section bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
                       <h3 className="text-lg font-semibold mb-3">🤖 AI Analysis</h3>
+                      
+                      {state.normalizedDoc.counter && (
+                        <div className="mb-4 p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">📊 Total Projects Analyzed</span>
+                            <span className="font-bold text-green-600">{state.normalizedDoc.counter.total?.toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm mt-1">
+                            <span className="text-gray-500">Today's Checks</span>
+                            <span className="font-bold text-blue-600">{state.normalizedDoc.counter.today}</span>
+                          </div>
+                        </div>
+                      )}
+
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-white rounded p-3">
