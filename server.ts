@@ -31,6 +31,8 @@ const classifier = ScoreBandClassifier.getInstance();
 const supervisorWorkflow = SupervisorReviewWorkflow.getInstance();
 const pdfGenerator = PDFReportGenerator.getInstance();
 const batchService = BatchProcessingService.getInstance();
+import { BatchCounterService } from './src/services/BatchCounterService.js';
+const counterService = BatchCounterService.getInstance();
 
 import { AIGateway } from './src/ai/gateway/AIGateway.js';
 import { QueueManager } from './src/services/queue/QueueManager.js';
@@ -803,7 +805,24 @@ Do NOT include markdown wrapping other than the JSON block. Do NOT hallucinate.
       duration: elapsed(),
     });
 
-    res.json(responseData);
+    
+    // ============================================
+    // PUBLIC BATCH SECRET COUNTER
+    // ============================================
+    console.log('[COUNTER] Incrementing project counter...');
+    const counterStats = counterService.incrementCounter();
+    console.log(`[COUNTER] Total projects: ${counterStats.total}`);
+    console.log(`[COUNTER] Today: ${counterStats.today}, Week: ${counterStats.week}, Month: ${counterStats.month}`);
+
+    // Add counter stats to response
+    responseData.data.counter = {
+      total: counterStats.total,
+      today: counterStats.today,
+      week: counterStats.week,
+      month: counterStats.month,
+      lastProject: counterService.getStats().lastProjectTimestamp
+    };
+res.json(responseData);
 
 
   } catch (error: any) {
@@ -823,6 +842,51 @@ Do NOT include markdown wrapping other than the JSON block. Do NOT hallucinate.
 
 // — Vite & Static Asset Mounting ———————————————————————————————————————————————
 
+
+// ============================================
+// PUBLIC COUNTER ENDPOINT
+// ============================================
+app.get('/api/counter/stats', (req, res) => {
+  try {
+    const stats = counterService.getStats();
+    res.json({
+      success: true,
+      data: {
+        totalProjects: stats.totalProjects,
+        todayProjects: stats.todayProjects,
+        thisWeekProjects: stats.thisWeekProjects,
+        thisMonthProjects: stats.thisMonthProjects,
+        averageDaily: stats.averageDaily,
+        lastProjectTimestamp: stats.lastProjectTimestamp
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/admin/secret-counter', (req, res) => {
+  try {
+    const secret = req.headers['x-admin-secret'];
+    const validSecret = process.env.SUPERADMIN_SECRET;
+    
+    if (!validSecret || secret !== validSecret) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+    
+    const stats = counterService.getStats();
+    res.json({
+      success: true,
+      data: {
+        totalProjects: stats.totalProjects,
+        secretCounter: counterService.getSecretCounter(),
+        dailyHistory: counterService.getDailyHistory()
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 async function start() {
   if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     const { createServer: createViteServer } = await import('vite');
