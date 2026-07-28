@@ -686,16 +686,7 @@ export const PlagiarismChecker: React.FC = () => {
                     </div>
                   </Card>
 
-                  {/* Provider Status Dashboard */}
-                  {state.normalizedDoc?.federationMetrics?.providers && 
- state.normalizedDoc.federationMetrics.providers.length > 0 ? (
-  <ProviderStatus metrics={state.normalizedDoc.federationMetrics.providers} />
-) : (
-  <div className="text-sm text-gray-500 p-2 border rounded-lg">
-    <span className="font-medium">📊 Provider Status</span>
-    <div className="mt-1 text-xs">No provider metrics available</div>
-  </div>
-)}
+                  {/* Provider Status Dashboard - DISABLED */}
 
                   {/* AI Analysis Section */}
                   {state.normalizedDoc.aiAnalysis && (

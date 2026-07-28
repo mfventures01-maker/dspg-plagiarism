@@ -29761,3 +29761,110 @@ PS C:\Projects\dspg> # Open the ProviderStatus component
 PS C:\Projects\dspg> notepad src\components\ProviderStatus.tsx
 PS C:\Projects\dspg> # Open the file
 PS C:\Projects\dspg> notepad src\components\ProviderStatus.tsx
+PS C:\Projects\dspg> # Stop the server (Ctrl+C)
+PS C:\Projects\dspg> # Clear cache
+PS C:\Projects\dspg> Remove-Item -Recurse -Force node_modules/.vite -ErrorAction SilentlyContinue
+PS C:\Projects\dspg> # Restart
+PS C:\Projects\dspg> npm run dev
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+    at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+    at listenInCluster (node:net:1965:12)
+    at doListen (node:net:2139:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1944:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 3000
+}
+
+Node.js v20.20.0
+PS C:\Projects\dspg> # Stage all changes
+PS C:\Projects\dspg> git add .
+
+PS C:\Projects\dspg> # Commit with a clear message
+PS C:\Projects\dspg> git commit -m "Complete removal of Semantic Scholar with fixed ProviderStatus component and PDF/QR generation"
+
+PS C:\Projects\dspg> # Push to GitHub
+PS C:\Projects\dspg> git push origin main
+
+PS C:\Projects\dspg> # Deploy to Vercel
+PS C:\Projects\dspg> vercel --prod
+
+PS C:\Projects\dspg> # Test the production API
+PS C:\Projects\dspg> $body = '{"text":"machine learning"}'
+PS C:\Projects\dspg> $response = Invoke-RestMethod -Uri "https://dspg.vercel.app/api/analyze" `
+    -Method Post `
+    -ContentType "application/json" `
+    -Body $body
+PS C:\Projects\dspg> $response.success
+PS C:\Projects\dspg> # Search for where federationMetrics is used in the frontend
+PS C:\Projects\dspg> Select-String -Path "src\components\*.tsx" -Pattern "federationMetrics" -Context 3
+
+  src\components\PlagiarismChecker.tsx:687:                  </Card>
+  src\components\PlagiarismChecker.tsx:688:
+  src\components\PlagiarismChecker.tsx:689:                  {/* Provider Status Dashboard */}
+> src\components\PlagiarismChecker.tsx:690:                  {state.normalizedDoc?.federationMetrics?.providers &&
+> src\components\PlagiarismChecker.tsx:691: state.normalizedDoc.federationMetrics.providers.length > 0 ? (
+> src\components\PlagiarismChecker.tsx:692:  <ProviderStatus metrics={state.normalizedDoc.federationMetrics.providers} />
+  src\components\PlagiarismChecker.tsx:693:) : (
+  src\components\PlagiarismChecker.tsx:694:  <div className="text-sm text-gray-500 p-2 border rounded-lg">
+  src\components\PlagiarismChecker.tsx:695:    <span className="font-medium">📊 Provider Status</span>
+
+
+PS C:\Projects\dspg> # Open the ProviderStatus component
+PS C:\Projects\dspg> notepad src\components\ProviderStatus.tsx
+PS C:\Projects\dspg> # Show the exact lines
+PS C:\Projects\dspg> Get-Content "src\components\PlagiarismChecker.tsx" | Select-Object -Index (685..700)
+                    </div>
+                  </Card>
+
+                  {/* Provider Status Dashboard */}
+                  {state.normalizedDoc?.federationMetrics?.providers &&
+ state.normalizedDoc.federationMetrics.providers.length > 0 ? (
+  <ProviderStatus metrics={state.normalizedDoc.federationMetrics.providers} />
+) : (
+  <div className="text-sm text-gray-500 p-2 border rounded-lg">
+    <span className="font-medium">ðŸ“Š Provider Status</span>
+    <div className="mt-1 text-xs">No provider metrics available</div>
+  </div>
+)}
+
+                  {/* AI Analysis Section */}
+                  {state.normalizedDoc.aiAnalysis && (
+PS C:\Projects\dspg> # Stop the server (Ctrl+C)
+PS C:\Projects\dspg> # Clear Vite cache
+PS C:\Projects\dspg> Remove-Item -Recurse -Force node_modules/.vite -ErrorAction SilentlyContinue
+PS C:\Projects\dspg> # Restart the server
+PS C:\Projects\dspg> npm run dev
+
+PS C:\Projects\dspg> npm run dev 
+
+PS C:\Projects\dspg> TerminatingError(): "The pipeline has been stopped."
+>> TerminatingError(): "The pipeline has been stopped."
+PS C:\Projects\dspg> # Find and kill the process using port 3000
+PS C:\Projects\dspg> netstat -ano | findstr :3000
+
+PS C:\Projects\dspg> # Kill the process (replace PID with the actual number)
+PS C:\Projects\dspg> taskkill /PID <PID> /F
+At line:1 char:15
++ taskkill /PID <PID> /F
++               ~
+The '<' operator is reserved for future use.
+At line:1 char:15
++ taskkill /PID <PID> /F
++               ~
+The '<' operator is reserved for future use.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : RedirectionNotSupported
+
+PS C:\Projects\dspg> # Or kill all node processes
+PS C:\Projects\dspg> taskkill /IM node.exe /F
+
+PS C:\Projects\dspg> # Now start the server
