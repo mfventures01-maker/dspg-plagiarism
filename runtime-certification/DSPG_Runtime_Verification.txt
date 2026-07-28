@@ -29664,3 +29664,100 @@ PS C:\Projects\dspg> # Kill all node processes
 PS C:\Projects\dspg> taskkill /IM node.exe /F
 
 PS C:\Projects\dspg> # Start the server
+PS C:\Projects\dspg> npm run dev
+2:24:42 PM [vite] (client) page reload public/manifest.json
+Terminate batch job (Y/N)? y
+PS C:\Projects\dspg> TerminatingError(): "The pipeline has been stopped."
+>> TerminatingError(): "The pipeline has been stopped."
+PS C:\Projects\dspg> # Backup the file
+PS C:\Projects\dspg> Copy-Item "src\components\ProviderStatus.tsx" "src\components\ProviderStatus.tsx.bak"
+PS C:\Projects\dspg> # Create the fixed file content
+PS C:\Projects\dspg> $fixedContent = @'
+import React from 'react';
+
+interface ProviderMetric {
+  name: string;
+  status: 'SUCCESS' | 'FAILED' | 'PENDING';
+  retrieved: number;
+  accepted: number;
+  rejected: number;
+  time: number;
+}
+
+interface ProviderStatusProps {
+  metrics: ProviderMetric[];
+}
+
+export const ProviderStatus: React.FC<ProviderStatusProps> = ({ metrics }) => {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'SUCCESS': return '✅';
+      case 'FAILED': return '❌';
+      default: return '⏳';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'SUCCESS': return 'text-green-600';
+      case 'FAILED': return 'text-red-600';
+      default: return 'text-yellow-600';
+    }
+  };
+
+  // Safe check: if metrics is undefined or empty, show a message
+  if (!metrics || !Array.isArray(metrics) || metrics.length === 0) {
+    return (
+      <div className="provider-status-dashboard">
+        <h3 className="text-lg font-semibold mb-3">🔍 Provider Search Results</h3>
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center text-gray-500">
+          No provider data available
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="provider-status-dashboard">
+      <h3 className="text-lg font-semibold mb-3">🔍 Provider Search Results</h3>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {metrics.map((metric, index) => {
+          // Skip if metric is undefined
+          if (!metric) return null;
+          
+          return (
+            <div key={metric.name || index} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-sm">{metric.name || 'Unknown'}</span>
+                <span className={`text-lg ${getStatusColor(metric.status)}`}>
+                  {getStatusIcon(metric.status)}
+                </span>
+              </div>
+              <div className="mt-1">
+                <span className="text-2xl font-bold">{metric.retrieved ?? 0}</span>
+                <span className="text-gray-500 text-sm ml-1">papers</span>
+              </div>
+              <div className="text-xs text-gray-400">
+                {metric.time ?? 0}s
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+'@
+PS C:\Projects\dspg> # Write the fixed content
+PS C:\Projects\dspg> $fixedContent | Out-File -FilePath "src\components\ProviderStatus.tsx" -Encoding UTF8
+PS C:\Projects\dspg> npm run build
+
+PS C:\Projects\dspg> npm run dev
+2:49:26 PM [vite] (client) page reload public/manifest.json
+Terminate batch job (Y/N)? y
+PS C:\Projects\dspg> TerminatingError(): "The pipeline has been stopped."
+>> TerminatingError(): "The pipeline has been stopped."
+PS C:\Projects\dspg> # Open the ProviderStatus component
+PS C:\Projects\dspg> notepad src\components\ProviderStatus.tsx
+PS C:\Projects\dspg> # Open the file
+PS C:\Projects\dspg> notepad src\components\ProviderStatus.tsx
