@@ -187,7 +187,6 @@ export class CandidatePaperProvider implements ICandidatePaperProvider {
         status: unpaywallStatus
       },
       {
-      {
         name: 'Crossref',
         retrieved: crossrefPapers.length,
         accepted: mergeResult.metrics.Crossref?.accepted || 0,
@@ -238,6 +237,7 @@ export class CandidatePaperProvider implements ICandidatePaperProvider {
     return resultList;
   }
 }
+
 
 
 
