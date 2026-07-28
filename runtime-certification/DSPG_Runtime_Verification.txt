@@ -29649,3 +29649,18 @@ ile exist?
   18 |  import { usePlagiarismCheck } from "../hooks/usePlagiarismCheck";
   19 |  import { useFileUpload } from "../hooks/useFileUpload";
 PS C:\Projects\dspg> # Create progress component
+PS C:\Projects\dspg> New-Item C:\Projects\dspg\src\components\ProgressIndicator.tsx -ItemType File
+>> TerminatingError(New-Item): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: The file 'C:\Projects\dspg\src\components\ProgressIndicator.tsx' already exists."
+>> TerminatingError(New-Item): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: The file 'C:\Projects\dspg\src\components\ProgressIndicator.tsx' already exists."
+The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: The file 'C:\Projects\dspg\src\components\ProgressIndicator.tsx' already exists.
+New-Item : The file 'C:\Projects\dspg\src\components\ProgressIndicator.tsx' already exists.
+At line:1 char:1
++ New-Item C:\Projects\dspg\src\components\ProgressIndicator.tsx -ItemT ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : WriteError: (C:\Projects\dsp...ssIndicator.tsx:String) [New-Item], IOException
+    + FullyQualifiedErrorId : NewItemIOError,Microsoft.PowerShell.Commands.NewItemCommand
+
+PS C:\Projects\dspg> # Kill all node processes
+PS C:\Projects\dspg> taskkill /IM node.exe /F
+
+PS C:\Projects\dspg> # Start the server

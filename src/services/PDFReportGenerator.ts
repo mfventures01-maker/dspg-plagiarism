@@ -1,7 +1,7 @@
 // src/services/PDFReportGenerator.ts
 // HOEOS: Phase 4 - PDF Export with QR Verification
 
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 
 export interface PDFReportData {
@@ -163,13 +163,14 @@ export class PDFReportGenerator {
     doc.text(`Risk Level: ${data.riskLevel}`, margin, verdictY + 28);
 
     // Matched Sources (if any)
+ let yPos = 0;
     if (data.matchedSources && data.matchedSources.length > 0) {
       const sourceY = verdictY + 40;
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.text('MATCHED SOURCES', margin, sourceY + 5);
 
-      let yPos = sourceY + 15;
+      yPos = sourceY + 15;
       for (const source of data.matchedSources.slice(0, 5)) {
         if (yPos > pageHeight - 40) {
           doc.addPage();
@@ -296,3 +297,4 @@ export class PDFReportGenerator {
     }
   }
 }
+

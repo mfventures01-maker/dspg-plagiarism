@@ -18,7 +18,7 @@ export interface MergeResult {
     CORE: MergeMetrics;
     OpenAlex: MergeMetrics;
     Unpaywall?: MergeMetrics;
-        Crossref?: MergeMetrics;
+    Crossref?: MergeMetrics;
     totalRetrieved: number;
     totalMerged: number;
     duplicatesRemoved: number;
@@ -27,21 +27,26 @@ export interface MergeResult {
 
 export class CandidateMergeEngine {
   /**
-   * Merges and deduplicates candidates from CORE and OpenAlex.
+   * Merges and deduplicates candidates from CORE, OpenAlex, Unpaywall, and Crossref.
    * Deduplication priorities:
    * 1. DOI match
    * 2. OpenAlex ID match
    * 3. Title similarity (normalized string comparison)
    * 4. Author overlap
    */
-  public merge(corePapers: CandidatePaper[], openAlexPapers: CandidatePaper[], unpaywallPapers: CandidatePaper[] = [] = [], crossrefPapers: CandidatePaper[] = []): MergeResult {
+  public merge(
+    corePapers: CandidatePaper[],
+    openAlexPapers: CandidatePaper[],
+    unpaywallPapers: CandidatePaper[] = [],
+    crossrefPapers: CandidatePaper[] = []
+  ): MergeResult {
     const mergedList: CandidatePaper[] = [];
     const duplicatesRemovedSet = new Set<string>();
 
     const coreMetrics: MergeMetrics = { retrieved: corePapers.length, accepted: 0, rejected: 0, duplicate: 0 };
     const openAlexMetrics: MergeMetrics = { retrieved: openAlexPapers.length, accepted: 0, rejected: 0, duplicate: 0 };
     const unpaywallMetrics: MergeMetrics = { retrieved: unpaywallPapers.length, accepted: 0, rejected: 0, duplicate: 0 };
-        const crossrefMetrics: MergeMetrics = { retrieved: crossrefPapers.length, accepted: 0, rejected: 0, duplicate: 0 };
+    const crossrefMetrics: MergeMetrics = { retrieved: crossrefPapers.length, accepted: 0, rejected: 0, duplicate: 0 };
 
     const cleanDoiMap = new Map<string, CandidatePaper>();
     const idMap = new Map<string, CandidatePaper>();
@@ -53,29 +58,7 @@ export class CandidateMergeEngine {
         coreMetrics.rejected++;
         duplicatesRemovedSet.add(paper.providerId);
       } else {
-        const mergedPaper: CandidatePaper = {
-          provider: paper.provider || 'Unknown',
-          providerId: paper.providerId || '',
-          title: paper.title || 'Untitled',
-          abstract: paper.abstract || '',
-          doi: paper.doi || '',
-          authors: paper.authors || [],
-          institutions: paper.institutions || [],
-          publicationYear: paper.publicationYear || new Date().getFullYear(),
-          journal: paper.journal || '',
-          publisher: paper.publisher || '',
-          citationCount: paper.citationCount || 0,
-          concepts: paper.concepts || [],
-          keywords: paper.keywords || [],
-          subjects: paper.subjects || [],
-          landingPage: paper.landingPage || '',
-          pdfUrl: paper.pdfUrl || '',
-          metadata: paper.metadata || {},
-          coreId: paper.coreId || 0,
-          language: paper.language || 'en',
-          fullTextAvailable: !!paper.pdfUrl,
-          repository: paper.repository || 'Unknown',
-        };
+        const mergedPaper: CandidatePaper = this.createMergedPaper(paper);
         mergedList.push(mergedPaper);
         coreMetrics.accepted++;
         if (mergedPaper.doi) cleanDoiMap.set(this.cleanDoi(mergedPaper.doi), mergedPaper);
@@ -90,29 +73,7 @@ export class CandidateMergeEngine {
         openAlexMetrics.rejected++;
         duplicatesRemovedSet.add(paper.providerId);
       } else {
-        const mergedPaper: CandidatePaper = {
-          provider: paper.provider || 'Unknown',
-          providerId: paper.providerId || '',
-          title: paper.title || 'Untitled',
-          abstract: paper.abstract || '',
-          doi: paper.doi || '',
-          authors: paper.authors || [],
-          institutions: paper.institutions || [],
-          publicationYear: paper.publicationYear || new Date().getFullYear(),
-          journal: paper.journal || '',
-          publisher: paper.publisher || '',
-          citationCount: paper.citationCount || 0,
-          concepts: paper.concepts || [],
-          keywords: paper.keywords || [],
-          subjects: paper.subjects || [],
-          landingPage: paper.landingPage || '',
-          pdfUrl: paper.pdfUrl || '',
-          metadata: paper.metadata || {},
-          coreId: paper.coreId || 0,
-          language: paper.language || 'en',
-          fullTextAvailable: !!paper.pdfUrl,
-          repository: paper.repository || 'Unknown',
-        };
+        const mergedPaper: CandidatePaper = this.createMergedPaper(paper);
         mergedList.push(mergedPaper);
         openAlexMetrics.accepted++;
         if (mergedPaper.doi) cleanDoiMap.set(this.cleanDoi(mergedPaper.doi), mergedPaper);
@@ -127,67 +88,9 @@ export class CandidateMergeEngine {
         unpaywallMetrics.rejected++;
         duplicatesRemovedSet.add(paper.providerId);
       } else {
-        const mergedPaper: CandidatePaper = {
-          provider: paper.provider || 'Unknown',
-          providerId: paper.providerId || '',
-          title: paper.title || 'Untitled',
-          abstract: paper.abstract || '',
-          doi: paper.doi || '',
-          authors: paper.authors || [],
-          institutions: paper.institutions || [],
-          publicationYear: paper.publicationYear || new Date().getFullYear(),
-          journal: paper.journal || '',
-          publisher: paper.publisher || '',
-          citationCount: paper.citationCount || 0,
-          concepts: paper.concepts || [],
-          keywords: paper.keywords || [],
-          subjects: paper.subjects || [],
-          landingPage: paper.landingPage || '',
-          pdfUrl: paper.pdfUrl || '',
-          metadata: paper.metadata || {},
-          coreId: paper.coreId || 0,
-          language: paper.language || 'en',
-          fullTextAvailable: !!paper.pdfUrl,
-          repository: paper.repository || 'Unknown',
-        };
+        const mergedPaper: CandidatePaper = this.createMergedPaper(paper);
         mergedList.push(mergedPaper);
         unpaywallMetrics.accepted++;
-        if (mergedPaper.doi) cleanDoiMap.set(this.cleanDoi(mergedPaper.doi), mergedPaper);
-        idMap.set(mergedPaper.providerId, mergedPaper);
-      }
-    }
-
-    for (const paper of semanticPapers) {
-      if (this.isDuplicate(paper, mergedList, cleanDoiMap, idMap)) {
-        semanticMetrics.duplicate++;
-        semanticMetrics.rejected++;
-        duplicatesRemovedSet.add(paper.providerId);
-      } else {
-        const mergedPaper: CandidatePaper = {
-          provider: paper.provider || 'Unknown',
-          providerId: paper.providerId || '',
-          title: paper.title || 'Untitled',
-          abstract: paper.abstract || '',
-          doi: paper.doi || '',
-          authors: paper.authors || [],
-          institutions: paper.institutions || [],
-          publicationYear: paper.publicationYear || new Date().getFullYear(),
-          journal: paper.journal || '',
-          publisher: paper.publisher || '',
-          citationCount: paper.citationCount || 0,
-          concepts: paper.concepts || [],
-          keywords: paper.keywords || [],
-          subjects: paper.subjects || [],
-          landingPage: paper.landingPage || '',
-          pdfUrl: paper.pdfUrl || '',
-          metadata: paper.metadata || {},
-          coreId: paper.coreId || 0,
-          language: paper.language || 'en',
-          fullTextAvailable: !!paper.pdfUrl,
-          repository: paper.repository || 'Unknown',
-        };
-        mergedList.push(mergedPaper);
-        semanticMetrics.accepted++;
         if (mergedPaper.doi) cleanDoiMap.set(this.cleanDoi(mergedPaper.doi), mergedPaper);
         idMap.set(mergedPaper.providerId, mergedPaper);
       }
@@ -200,29 +103,7 @@ export class CandidateMergeEngine {
         crossrefMetrics.rejected++;
         duplicatesRemovedSet.add(paper.providerId);
       } else {
-        const mergedPaper: CandidatePaper = {
-          provider: paper.provider || 'Unknown',
-          providerId: paper.providerId || '',
-          title: paper.title || 'Untitled',
-          abstract: paper.abstract || '',
-          doi: paper.doi || '',
-          authors: paper.authors || [],
-          institutions: paper.institutions || [],
-          publicationYear: paper.publicationYear || new Date().getFullYear(),
-          journal: paper.journal || '',
-          publisher: paper.publisher || '',
-          citationCount: paper.citationCount || 0,
-          concepts: paper.concepts || [],
-          keywords: paper.keywords || [],
-          subjects: paper.subjects || [],
-          landingPage: paper.landingPage || '',
-          pdfUrl: paper.pdfUrl || '',
-          metadata: paper.metadata || {},
-          coreId: paper.coreId || 0,
-          language: paper.language || 'en',
-          fullTextAvailable: !!paper.pdfUrl,
-          repository: paper.repository || 'Unknown',
-        };
+        const mergedPaper: CandidatePaper = this.createMergedPaper(paper);
         mergedList.push(mergedPaper);
         crossrefMetrics.accepted++;
         if (mergedPaper.doi) cleanDoiMap.set(this.cleanDoi(mergedPaper.doi), mergedPaper);
@@ -236,11 +117,37 @@ export class CandidateMergeEngine {
         CORE: coreMetrics,
         OpenAlex: openAlexMetrics,
         Unpaywall: unpaywallMetrics,
-                Crossref: crossrefMetrics,
-        totalRetrieved: corePapers.length + openAlexPapers.length + unpaywallPapers.length  + crossrefPapers.length,
+        Crossref: crossrefMetrics,
+        totalRetrieved: corePapers.length + openAlexPapers.length + unpaywallPapers.length + crossrefPapers.length,
         totalMerged: mergedList.length,
         duplicatesRemoved: duplicatesRemovedSet.size
       }
+    };
+  }
+
+  private createMergedPaper(paper: CandidatePaper): CandidatePaper {
+    return {
+      provider: paper.provider || 'Unknown',
+      providerId: paper.providerId || '',
+      title: paper.title || 'Untitled',
+      abstract: paper.abstract || '',
+      doi: paper.doi || '',
+      authors: paper.authors || [],
+      institutions: paper.institutions || [],
+      publicationYear: paper.publicationYear || new Date().getFullYear(),
+      journal: paper.journal || '',
+      publisher: paper.publisher || '',
+      citationCount: paper.citationCount || 0,
+      concepts: paper.concepts || [],
+      keywords: paper.keywords || [],
+      subjects: paper.subjects || [],
+      landingPage: paper.landingPage || '',
+      pdfUrl: paper.pdfUrl || '',
+      metadata: paper.metadata || {},
+      coreId: paper.coreId || 0,
+      language: paper.language || 'en',
+      fullTextAvailable: !!paper.pdfUrl,
+      repository: paper.repository || 'Unknown',
     };
   }
 
@@ -272,7 +179,7 @@ export class CandidateMergeEngine {
         if (paper.authors.length === 0 || existing.authors.length === 0) {
           return true; // assume duplicate if either has no author info
         }
-        const hasOverlap = paper.authors.some(a1 => 
+        const hasOverlap = paper.authors.some(a1 =>
           existing.authors.some(a2 => this.normalizeAuthor(a1.name) === this.normalizeAuthor(a2.name))
         );
         if (hasOverlap) {
@@ -303,4 +210,3 @@ export class CandidateMergeEngine {
       .trim();
   }
 }
-
