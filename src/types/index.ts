@@ -114,8 +114,7 @@ export interface EvidencePackage {
     jaccard: number;
     cosine: number;
     textSimilarity?: number;
-    semanticSimilarity?: number;
-    bibliographicOverlap?: number;
+        bibliographicOverlap?: number;
     citationMatch?: number;
   };
   matchingFragments: any[];
@@ -152,3 +151,4 @@ export interface EvidenceAssessment {
   evidence: any[];
   confidence: number;
 }
+

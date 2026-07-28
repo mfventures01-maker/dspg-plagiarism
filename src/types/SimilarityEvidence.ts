@@ -28,8 +28,7 @@ export interface SimilarityEvidence {
   overallSimilarity: number;
   breakdown: {
     textSimilarity: number;
-    semanticSimilarity: number;
-    bibliographicOverlap: number;
+        bibliographicOverlap: number;
     citationMatch: number;
     metadataSimilarity: number;
   };
@@ -48,3 +47,4 @@ export interface SimilarityEvidence {
   sentenceScores?: number[];
   matchingChunks?: any[];
 }
+

@@ -154,7 +154,6 @@ Express Server (server.ts)
 | Institutional Corpus | — | ❌ | **Not implemented** |
 | Crossref integration | — | ❌ | **Not implemented** |
 | OpenAlex integration | — | ❌ | **Not implemented** |
-| Semantic Scholar integration | — | ❌ | **Not implemented** |
 | Vector/embedding search | — | ❌ | **Not implemented** |
 | Document chunking engine | — | ❌ | **UI label only** — not a real subsystem |
 
@@ -186,7 +185,6 @@ Express Server (server.ts)
 | Institutional Corpus | ❌ | ❌ | ❌ 0% |
 | Crossref Integration | ❌ | ❌ | ❌ 0% |
 | OpenAlex Integration | ❌ | ❌ | ❌ 0% |
-| Semantic Scholar Integration | ❌ | ❌ | ❌ 0% |
 | Citation Verification | ❌ | ❌ | ❌ 0% |
 
 > *\* Fallback "exists and runs" but generates fraudulent passing scores — not safe for academic use.*
@@ -311,7 +309,6 @@ PRIORITY 3 — Authentication & Security
 PRIORITY 4 — Corpus & Citation Verification
   P4.1  Build DSPG institutional corpus (past HND projects → vector embeddings)
   P4.2  Crossref DOI resolution for academic citation verification
-  P4.3  OpenAlex + Semantic Scholar API integration
 
 PRIORITY 5 — Cleanup & Consolidation
   P5.1  Remove unused `motion` dependency

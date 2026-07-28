@@ -28,8 +28,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ paper }) => {
     Crossref: 'bg-blue-100 text-blue-800',
     OpenAlex: 'bg-green-100 text-green-800',
     Unpaywall: 'bg-purple-100 text-purple-800',
-    SemanticScholar: 'bg-indigo-100 text-indigo-800',
-    CORE: 'bg-orange-100 text-orange-800',
+        CORE: 'bg-orange-100 text-orange-800',
   };
 
   return (
@@ -101,3 +100,4 @@ export const ResultCard: React.FC<ResultCardProps> = ({ paper }) => {
     </div>
   );
 };
+

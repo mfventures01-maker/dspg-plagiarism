@@ -7,7 +7,6 @@ import { CandidatePaper } from '../../types';
 import { COREProvider } from '../../providers/COREProvider';
 import { OpenAlexProvider } from '../../providers/OpenAlexProvider';
 import { UnpaywallProvider } from '../../providers/UnpaywallProvider.js';
-import { SemanticScholarProvider } from '../../providers/SemanticScholarProvider.js';
 import { CrossrefProvider } from '../../providers/CrossrefProvider.js';
 import { SearchQueryBuilder } from '../core/SearchQueryBuilder.js';
 import { CandidateMergeEngine } from './CandidateMergeEngine.js';
@@ -34,8 +33,7 @@ export class CandidatePaperProvider implements ICandidatePaperProvider {
   private readonly coreProvider: COREProvider;
   private readonly openAlexProvider: OpenAlexProvider;
   private readonly unpaywallProvider: UnpaywallProvider;
-  private readonly semanticScholarProvider: SemanticScholarProvider;
-  private readonly crossrefProvider: CrossrefProvider;
+    private readonly crossrefProvider: CrossrefProvider;
   private readonly queryBuilder: SearchQueryBuilder;
   private readonly mergeEngine: CandidateMergeEngine;
 
@@ -43,8 +41,7 @@ export class CandidatePaperProvider implements ICandidatePaperProvider {
     this.coreProvider = new COREProvider();
     this.openAlexProvider = new OpenAlexProvider();
     this.unpaywallProvider = new UnpaywallProvider();
-    this.semanticScholarProvider = new SemanticScholarProvider();
-    this.crossrefProvider = new CrossrefProvider();
+        this.crossrefProvider = new CrossrefProvider();
     this.queryBuilder = new SearchQueryBuilder();
     this.mergeEngine = new CandidateMergeEngine();
   }
@@ -72,10 +69,7 @@ export class CandidatePaperProvider implements ICandidatePaperProvider {
     let unpaywallStatus: 'SUCCESS' | 'FAILED' = 'SUCCESS';
     let unpaywallTime = 0;
 
-    let semanticPapers: CandidatePaper[] = [];
-    let semanticStatus: 'SUCCESS' | 'FAILED' = 'SUCCESS';
-    let semanticTime = 0;
-
+            
     let crossrefPapers: CandidatePaper[] = [];
     let crossrefStatus: 'SUCCESS' | 'FAILED' = 'SUCCESS';
     let crossrefTime = 0;
@@ -132,12 +126,12 @@ export class CandidatePaperProvider implements ICandidatePaperProvider {
     const semanticPromise = (async () => {
       const start = Date.now();
       try {
-        semanticPapers = await this.semanticScholarProvider.search(query);
+        
       } catch (err) {
-        console.error('[Research Federation] Semantic Scholar retrieval failed:', err);
-        semanticStatus = 'FAILED';
+        
+        
       } finally {
-        semanticTime = Number(((Date.now() - start) / 1000).toFixed(2));
+        
       }
     })();
 
@@ -153,16 +147,15 @@ export class CandidatePaperProvider implements ICandidatePaperProvider {
       }
     })();
 
-    await Promise.all([corePromise, openAlexPromise, unpaywallPromise, semanticPromise, crossrefPromise]);
+    await Promise.all([corePromise, openAlexPromise, unpaywallPromise, crossrefPromise]);
 
     console.log(`[Research Federation] CORE status: ${coreStatus} (${corePapers.length} retrieved, ${coreTime}s)`);
     console.log(`[Research Federation] OpenAlex status: ${openAlexStatus} (${openAlexPapers.length} retrieved, ${openAlexTime}s)`);
     console.log(`[Research Federation] Unpaywall status: ${unpaywallStatus} (${unpaywallPapers.length} retrieved, ${unpaywallTime}s)`);
-    console.log(`[Research Federation] SemanticScholar status: ${semanticStatus} (${semanticPapers.length} retrieved, ${semanticTime}s)`);
     console.log(`[Research Federation] Crossref status: ${crossrefStatus} (${crossrefPapers.length} retrieved, ${crossrefTime}s)`);
 
     // Run Candidate Merge Engine
-    const mergeResult = this.mergeEngine.merge(corePapers, openAlexPapers, unpaywallPapers, semanticPapers, crossrefPapers);
+    const mergeResult = this.mergeEngine.merge(corePapers, openAlexPapers, unpaywallPapers, crossrefPapers);
 
     // Map metrics for each provider
     const providersMetrics: ProviderMetrics[] = [
@@ -194,14 +187,6 @@ export class CandidatePaperProvider implements ICandidatePaperProvider {
         status: unpaywallStatus
       },
       {
-        name: 'SemanticScholar',
-        retrieved: semanticPapers.length,
-        accepted: mergeResult.metrics.SemanticScholar?.accepted || 0,
-        rejected: mergeResult.metrics.SemanticScholar?.rejected || 0,
-        duplicate: mergeResult.metrics.SemanticScholar?.duplicate || 0,
-        time: semanticTime,
-        status: semanticStatus
-      },
       {
         name: 'Crossref',
         retrieved: crossrefPapers.length,
@@ -253,4 +238,6 @@ export class CandidatePaperProvider implements ICandidatePaperProvider {
     return resultList;
   }
 }
+
+
 

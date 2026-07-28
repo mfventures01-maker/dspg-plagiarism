@@ -18,8 +18,7 @@ export interface MergeResult {
     CORE: MergeMetrics;
     OpenAlex: MergeMetrics;
     Unpaywall?: MergeMetrics;
-    SemanticScholar?: MergeMetrics;
-    Crossref?: MergeMetrics;
+        Crossref?: MergeMetrics;
     totalRetrieved: number;
     totalMerged: number;
     duplicatesRemoved: number;
@@ -35,15 +34,14 @@ export class CandidateMergeEngine {
    * 3. Title similarity (normalized string comparison)
    * 4. Author overlap
    */
-  public merge(corePapers: CandidatePaper[], openAlexPapers: CandidatePaper[], unpaywallPapers: CandidatePaper[] = [], semanticPapers: CandidatePaper[] = [], crossrefPapers: CandidatePaper[] = []): MergeResult {
+  public merge(corePapers: CandidatePaper[], openAlexPapers: CandidatePaper[], unpaywallPapers: CandidatePaper[] = [] = [], crossrefPapers: CandidatePaper[] = []): MergeResult {
     const mergedList: CandidatePaper[] = [];
     const duplicatesRemovedSet = new Set<string>();
 
     const coreMetrics: MergeMetrics = { retrieved: corePapers.length, accepted: 0, rejected: 0, duplicate: 0 };
     const openAlexMetrics: MergeMetrics = { retrieved: openAlexPapers.length, accepted: 0, rejected: 0, duplicate: 0 };
     const unpaywallMetrics: MergeMetrics = { retrieved: unpaywallPapers.length, accepted: 0, rejected: 0, duplicate: 0 };
-    const semanticMetrics: MergeMetrics = { retrieved: semanticPapers.length, accepted: 0, rejected: 0, duplicate: 0 };
-    const crossrefMetrics: MergeMetrics = { retrieved: crossrefPapers.length, accepted: 0, rejected: 0, duplicate: 0 };
+        const crossrefMetrics: MergeMetrics = { retrieved: crossrefPapers.length, accepted: 0, rejected: 0, duplicate: 0 };
 
     const cleanDoiMap = new Map<string, CandidatePaper>();
     const idMap = new Map<string, CandidatePaper>();
@@ -159,7 +157,6 @@ export class CandidateMergeEngine {
       }
     }
 
-    // Process Semantic Scholar papers next
     for (const paper of semanticPapers) {
       if (this.isDuplicate(paper, mergedList, cleanDoiMap, idMap)) {
         semanticMetrics.duplicate++;
@@ -239,9 +236,8 @@ export class CandidateMergeEngine {
         CORE: coreMetrics,
         OpenAlex: openAlexMetrics,
         Unpaywall: unpaywallMetrics,
-        SemanticScholar: semanticMetrics,
-        Crossref: crossrefMetrics,
-        totalRetrieved: corePapers.length + openAlexPapers.length + unpaywallPapers.length + semanticPapers.length + crossrefPapers.length,
+                Crossref: crossrefMetrics,
+        totalRetrieved: corePapers.length + openAlexPapers.length + unpaywallPapers.length  + crossrefPapers.length,
         totalMerged: mergedList.length,
         duplicatesRemoved: duplicatesRemovedSet.size
       }
@@ -307,3 +303,4 @@ export class CandidateMergeEngine {
       .trim();
   }
 }
+
