@@ -31,7 +31,7 @@ const classifier = ScoreBandClassifier.getInstance();
 const supervisorWorkflow = SupervisorReviewWorkflow.getInstance();
 const pdfGenerator = PDFReportGenerator.getInstance();
 const batchService = BatchProcessingService.getInstance();
-import { BatchCounterService } from './src/services/BatchCounterService.js';
+import { BatchCounterService } from './src/services/BatchCounterService';
 const counterService = BatchCounterService.getInstance();
 
 import { AIGateway } from './src/ai/gateway/AIGateway.js';
